@@ -1,13 +1,13 @@
 pynrf24
 =======
 
-Python port of maniacbug NRF24L01+ library.
+Python port of the RF24 library for NRF24L01+ radios
 
 Introduction
 ____________
 
 All methods were ported and most methods prototypes were kept similar. This should facilitate the adaptation of existing code.
-Limitations were also ported and unfortunatelly some bugs may have been introduced.
+Limitations were also ported and unfortunately some bugs may have been introduced.
 
 For more information regarding how to use this library, check the RF24 documentation: http://maniacbug.github.io/RF24/
 Most of the information there will also be valid to this library.
@@ -24,21 +24,21 @@ _____________
  * GPIO access requires Adafruit BBIO library: https://github.com/adafruit/adafruit-beaglebone-io-python
 
 Wiring
-______________
+______
 
     nRF24L01+             BeagleBoneBlack
-	+-+-+                    (header)      
-	|8|7|	1: GND      ->   P9 GND      
+	+-+-+                    (header)
+	|8|7|	1: GND      ->   P9 GND
 	+-+-+	2: 3.3V     ->   P9 3.3v
-	|6|5|	3: CE       ->   P9_15 (configurable)    
-	+-+-+	4: CSN      ->   SPI0.CS  
-	|4|3|	5: SCKL     ->   SPI0.SCK  
-	+-+-+	6: MOSI     ->   SPI0.D0 
+	|6|5|	3: CE       ->   P9_15 (configurable)
+	+-+-+	4: CSN      ->   SPI0.CS
+	|4|3|	5: SCKL     ->   SPI0.SCK
+	+-+-+	6: MOSI     ->   SPI0.D0
 	|2|1|	7: MISO     ->   SPI0.D1
-	+-+-+	8: IRQ      ->   P9_16 (configurable) 
+	+-+-+	8: IRQ      ->   P9_16 (configurable)
 
 Examples
-________________
+________
 
 Initialization:
 
@@ -64,16 +64,16 @@ Sending Data:
 
 
 Receiving Data:
-	
+
 	#Wait for data
 	pipe =[0]
 	while not radio.available(pipe):
 		time.sleep(10000/1000000.0)
-	
+
 	#Receive Data
 	recv_buffer = []
     radio.read(recv_buffer)
-	
+
 	#Print the buffer
 	print recv_buffer
 
