@@ -16,7 +16,7 @@ For more information regarding how to use this library, check the RF24 documenta
 Most of the information there will also be valid to this library.
 
 Tested in a BeagleBoneBlack using spi0 and NRF24L01+ radios.
-Should work with not problems in a Raspberry Pi or with NRF24L01 (non +) radios.
+Should work without problems in a Raspberry Pi or with NRF24L01 (non +) radios.
 
 Requirements
 ------------
