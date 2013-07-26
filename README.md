@@ -3,8 +3,11 @@ pynrf24
 
 Python port of the RF24 library for NRF24L01+ radios
 
+
+
 Introduction
-____________
+------------
+
 
 All methods were ported and most methods prototypes were kept similar. This should facilitate the adaptation of existing code.
 Limitations were also ported and unfortunately some bugs may have been introduced.
@@ -16,7 +19,7 @@ Tested in a BeagleBoneBlack using spi0 and NRF24L01+ radios.
 Should work with not problems in a Raspberry Pi or with NRF24L01 (non +) radios.
 
 Requirements
-_____________
+------------
 
  * Python 2
  * SPI Enabled on the device: http://hipstercircuits.com/enable-spi-with-device-tree-on-beaglebone-black-copy-paste/
@@ -24,7 +27,7 @@ _____________
  * GPIO access requires Adafruit BBIO library: https://github.com/adafruit/adafruit-beaglebone-io-python
 
 Wiring
-______
+------
 
     nRF24L01+             BeagleBoneBlack
 	+-+-+                    (header)
@@ -38,7 +41,7 @@ ______
 	+-+-+	8: IRQ      ->   P9_16 (configurable)
 
 Examples
-________
+--------
 
 Initialization:
 
