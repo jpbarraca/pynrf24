@@ -173,6 +173,11 @@ class NRF24:
 		return
 
 	def irqWait(self):
+                        # A race condition may occur here.
+                        # Should set a timeout
+                        if GPIO.input(self.irq_pin) == 0:
+                            return
+
 		GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING)
 
 	def read_register(self, reg, blen = 1):
@@ -447,8 +452,12 @@ class NRF24:
 		status = self.get_status()
 		result = False
 
-		# Too noisy, enable if you really want lots o data!!
-		if  status & _BV(NRF24.RX_DR):
+                        if irq_wait:
+                                self.irqWait()
+
+                        # Sometimes the radio specifies that there is data in one pipe but
+                        # doesn't set the RX flag...
+		if  status & _BV(NRF24.RX_DR) or (status & 0b00001110 != 0b00001110):
 			result = True
 
   		if result:
