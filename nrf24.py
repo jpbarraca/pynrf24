@@ -240,7 +240,9 @@ class NRF24:
 
 		payload = self.spidev.xfer2(buffer)
 
-		buf.extend(payload[1:-1])
+                        del buf[:]
+
+		buf.extend(payload[1:])
   		return 0
 
 	def flush_rx(self):
