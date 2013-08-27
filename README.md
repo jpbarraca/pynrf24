@@ -36,8 +36,8 @@ Wiring
 	|6|5|	3: CE       ->   P9_15 (configurable)
 	+-+-+	4: CSN      ->   SPI0.CS
 	|4|3|	5: SCKL     ->   SPI0.SCK
-	+-+-+	6: MOSI     ->   SPI0.D0
-	|2|1|	7: MISO     ->   SPI0.D1
+	+-+-+	6: MOSI     ->   SPI0.D1
+	|2|1|	7: MISO     ->   SPI0.D0
 	+-+-+	8: IRQ      ->   P9_16 (configurable)
 
 Examples
