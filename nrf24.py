@@ -1,6 +1,6 @@
 #
 # Python port of Maniacbug NRF24L01 library
-# Author: João Paulo Barraca <jpbarraca@gmail.com>
+# Author: Joao Paulo Barraca <jpbarraca@gmail.com>
 #
 
 import Adafruit_BBIO.GPIO as GPIO
@@ -156,7 +156,7 @@ class NRF24:
 		self.channel = 76
 		self.data_rate = NRF24.BR_1MBPS
 		self.wide_band = False # 2Mbs data rate in use?
-        self.p_variant = False # False for RF24L01 and true for RF24L01P
+        	self.p_variant = False # False for RF24L01 and true for RF24L01P
 		self.payload_size = 5 #*< Fixed size of payloads
 		self.ack_payload_available = False #*< Whether there is an ack payload waiting
 		self.dynamic_payloads_enabled = False #*< Whether dynamic payloads are enabled.
@@ -173,10 +173,10 @@ class NRF24:
 		return
 
 	def irqWait(self):
-                        # A race condition may occur here.
-                        # Should set a timeout
-                        if GPIO.input(self.irq_pin) == 0:
-                            return
+                # A race condition may occur here.
+                # Should set a timeout
+                if GPIO.input(self.irq_pin) == 0:
+                	return
 
 		GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING)
 
@@ -239,9 +239,7 @@ class NRF24:
 		buffer[0] = NRF24.R_RX_PAYLOAD
 
 		payload = self.spidev.xfer2(buffer)
-
-                        del buf[:]
-
+                del buf[:]
 		buf.extend(payload[1:])
   		return 0
 
@@ -454,11 +452,11 @@ class NRF24:
 		status = self.get_status()
 		result = False
 
-                        if irq_wait:
-                                self.irqWait()
+                if irq_wait:
+                	self.irqWait()
 
-                        # Sometimes the radio specifies that there is data in one pipe but
-                        # doesn't set the RX flag...
+                # Sometimes the radio specifies that there is data in one pipe but
+                # doesn't set the RX flag...
 		if  status & _BV(NRF24.RX_DR) or (status & 0b00001110 != 0b00001110):
 			result = True
 
