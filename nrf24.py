@@ -226,8 +226,8 @@ class NRF24:
 			blank = [ 0x00 for i in range(blank_len) ]
 			buffer.extend(blank)
 
-		payload = self.spidev.xfer2(buffer)
-		return 0
+		return self.spidev.xfer2(buffer)
+
 
 	def read_payload(self, buf):
   		data_len = min(self.payload_size,len(buf))
@@ -375,7 +375,7 @@ class NRF24:
 
 		# Restore the pipe0 adddress, if exists
 		if self.pipe0_reading_address:
-			write_register(self.REG.RX_ADDR_P0, self.pipe0_reading_address, 5)
+			self.write_register(self.REG.RX_ADDR_P0, self.pipe0_reading_address, 5)
 
 		# Flush buffers
  		self.flush_rx()
@@ -565,11 +565,12 @@ class NRF24:
 	def writeAckPayload(self, pipe, buf, len):
 		self.csn(NRF24.LOW)
 
-		buffer = [ NRC24.W_ACK_PAYLOAD | ( pipe & 0x7 ) ]
+		buffer = [ NRF24.W_ACK_PAYLOAD | ( pipe & 0x7 ) ]
 
  		max_payload_size = 32
  		data_len = min(len,max_payload_size)
-  		buffer.extend(buf)
+  		buffer.extend(buf[0:data_len])
+
 		self.spidev.xfer2(buffer)
 
 		self.csn(NRF24.HIGH)
@@ -613,7 +614,6 @@ class NRF24:
   		elif level == NRF24.PA_LOW:
     			setup |= _BV(NRF24.RF_PWR_LOW)
   		elif level == NRF24.PA_MIN:
-    			# nothing
   			nop  = 0
   		elif level == NRF24.PA_ERROR:
     		# On error, go to maximum PA
