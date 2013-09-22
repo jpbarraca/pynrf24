@@ -209,7 +209,7 @@ class NRF24:
 			for i in range(min(len(value),length)):
 				buffer.append(int(value[len(value) - i - 1] & 0xff))
 		else:
-			raise("Value must be int or list")
+			raise Exception("Value must be int or list")
 
 		return self.spidev.xfer2(buffer)[0]
 
@@ -221,7 +221,15 @@ class NRF24:
 			blank_len = self.payload_size - data_len
 
 		buffer = [NRF24.W_TX_PAYLOAD]
-		buffer.extend(buf)
+		for n in buf:
+                                 t = type(n)
+                                 if t is str:
+                                         buffer.append(ord(n))
+                                 elif t is int:
+                                         buffer.append(n)
+                                 else:
+                                          raise Exception("Only ints and chars are supported: Found "+str(t))
+
 		if blank_len != 0:
 			blank = [ 0x00 for i in range(blank_len) ]
 			buffer.extend(blank)
