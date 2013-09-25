@@ -8,8 +8,10 @@ import spidev
 import time
 import sys
 
+
 def _BV(x):
-    return (1 << (x))
+    return 1 << x
+
 
 class NRF24:
     MAX_CHANNEL = 127
@@ -152,6 +154,7 @@ class NRF24:
 
     def __init__(self):
         self.ce_pin = "P9_15"
+        self.irq_pin = "P9_16"
         self.channel = 76
         self.data_rate = NRF24.BR_1MBPS
         self.wide_band = False # 2Mbs data rate in use?
@@ -162,7 +165,6 @@ class NRF24:
         self.ack_payload_length = 5 #*< Dynamic size of pending ack payload.
         self.pipe0_reading_address = None #*< Last address set on pipe 0 for reading.
         self.spidev = None
-
 
     def ce(self, level):
         if level == NRF24.HIGH:
@@ -180,33 +182,33 @@ class NRF24:
         GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING)
 
     def read_register(self, reg, blen=1):
-        buffer = [NRF24.R_REGISTER | ( NRF24.REGISTER_MASK & reg )]
+        buf = [NRF24.R_REGISTER | ( NRF24.REGISTER_MASK & reg )]
         for col in range(blen):
-            buffer.append(NRF24.NOP)
+            buf.append(NRF24.NOP)
 
-        resp = self.spidev.xfer2(buffer)
+        resp = self.spidev.xfer2(buf)
         if blen == 1:
             return resp[1]
 
         return resp[1:blen + 1]
 
     def write_register(self, reg, value, length=-1):
-        buffer = [NRF24.W_REGISTER | ( NRF24.REGISTER_MASK & reg )]
+        buf = [NRF24.W_REGISTER | ( NRF24.REGISTER_MASK & reg )]
         if isinstance(value, (int, long)):
             if length < 0:
                 length = 1
 
             length = min(4, length)
             for i in range(length):
-                buffer.insert(1, int(value & 0xff))
+                buf.insert(1, int(value & 0xff))
                 value >>= 8
 
-        elif isinstance(value, (list)):
+        elif isinstance(value, list):
             if length < 0:
                 length = len(value)
 
             for i in range(min(len(value), length)):
-                buffer.append(int(value[len(value) - i - 1] & 0xff))
+                buf.append(int(value[len(value) - i - 1] & 0xff))
         else:
             raise Exception("Value must be int or list")
 
@@ -219,21 +221,21 @@ class NRF24:
         if not self.dynamic_payloads_enabled:
             blank_len = self.payload_size - data_len
 
-        buffer = [NRF24.W_TX_PAYLOAD]
+        txbuffer = [NRF24.W_TX_PAYLOAD]
         for n in buf:
             t = type(n)
             if t is str:
-                buffer.append(ord(n))
+                txbuffer.append(ord(n))
             elif t is int:
-                buffer.append(n)
+                txbuffer.append(n)
             else:
                 raise Exception("Only ints and chars are supported: Found " + str(t))
 
         if blank_len != 0:
             blank = [0x00 for i in range(blank_len)]
-            buffer.extend(blank)
+            buf.extend(blank)
 
-        return self.spidev.xfer2(buffer)
+        return self.spidev.xfer2(txbuffer)
 
 
     def read_payload(self, buf):
@@ -242,10 +244,10 @@ class NRF24:
         if not self.dynamic_payloads_enabled:
             blank_len = self.payload_size - data_len
 
-        buffer = [NRF24.NOP for i in range(0, blank_len + data_len + 1)]
-        buffer[0] = NRF24.R_RX_PAYLOAD
+        txbuffer = [NRF24.NOP for i in range(0, blank_len + data_len + 1)]
+        txbuffer[0] = NRF24.R_RX_PAYLOAD
 
-        payload = self.spidev.xfer2(buffer)
+        payload = self.spidev.xfer2(txbuffer)
         del buf[:]
         buf.extend(payload[1:])
         return 0
@@ -259,7 +261,7 @@ class NRF24:
     def get_status(self):
         return self.spidev.xfer2([NRF24.NOP])[0]
 
-    def print_status(status):
+    def print_status(self, status):
         status_str = "STATUS\t = 0x{0:02x} RX_DR={1:x} TX_DS={2:x} MAX_RT={3:x} RX_P_NO={4:x} TX_FULL={5:x}\r\n".format(
             status,
             1 if status & _BV(NRF24.RX_DR) else 0,
@@ -290,7 +292,7 @@ class NRF24:
             reg += 1
             sys.stdout.write(" 0x"),
             for i in buf:
-                sys.stdout.write("%02x" % (i))
+                sys.stdout.write("%02x" % i)
 
         print ""
 
@@ -381,7 +383,7 @@ class NRF24:
 
         # Restore the pipe0 address, if exists
         if self.pipe0_reading_address:
-            self.write_register(self.REG.RX_ADDR_P0, self.pipe0_reading_address, 5)
+            self.write_register(self.RX_ADDR_P0, self.pipe0_reading_address, 5)
 
         # Flush buffers
         self.flush_rx()
@@ -408,15 +410,13 @@ class NRF24:
         # Begin the write
         self.startWrite(buf)
 
-        status = 0
-
         timeout = 500 #ms to wait for timeout
         sent_at = int(round(time.time() * 1000))
 
         while True:
-            status = self.read_register(NRF24.OBSERVE_TX, 1);
+            status = self.read_register(NRF24.OBSERVE_TX, 1)
             if (status & (_BV(NRF24.TX_DS) | _BV(NRF24.MAX_RT))) or (
-            int(round(time.time() * 1000) - sent_at > timeout) ):
+                int(round(time.time() * 1000) - sent_at > timeout) ):
                 break
             time.sleep(10 / 1000000L)
 
@@ -431,12 +431,12 @@ class NRF24:
         # Yay, we are done.
 
         # Power down
-        self.powerDown();
+        self.powerDown()
 
         # Flush buffers (Is this a relic of past experimentation, and not needed anymore??)
-        self.flush_tx();
+        self.flush_tx()
 
-        return result;
+        return result
 
     def startWrite(self, buf):
         # Transmitter power-up
@@ -455,7 +455,10 @@ class NRF24:
     def getDynamicPayloadSize(self):
         return self.spidev.xfer2([NRF24.R_RX_PL_WID, NRF24.NOP])[1]
 
-    def available(self, pipe_num=[], irq_wait=False):
+    def available(self, pipe_num=None, irq_wait=False):
+        if not pipe_num:
+            pipe_num = []
+
         status = self.get_status()
         result = False
 
@@ -573,18 +576,14 @@ class NRF24:
         # Enable dynamic payload on pipes 0 & 1
         self.write_register(NRF24.DYNPD, self.read_register(NRF24.DYNPD) | _BV(NRF24.DPL_P1) | _BV(NRF24.DPL_P0))
 
-    def writeAckPayload(self, pipe, buf, len):
-        self.csn(NRF24.LOW)
-
-        buffer = [NRF24.W_ACK_PAYLOAD | ( pipe & 0x7 )]
+    def writeAckPayload(self, pipe, buf, buf_len):
+        txbuffer = [NRF24.W_ACK_PAYLOAD | ( pipe & 0x7 )]
 
         max_payload_size = 32
-        data_len = min(len, max_payload_size)
-        buffer.extend(buf[0:data_len])
+        data_len = min(buf_len, max_payload_size)
+        txbuffer.extend(buf[0:data_len])
 
-        self.spidev.xfer2(buffer)
-
-        self.csn(NRF24.HIGH)
+        self.spidev.xfer2(txbuffer)
 
     def isAckPayloadAvailable(self):
         return False
@@ -634,18 +633,16 @@ class NRF24:
 
 
     def getPALevel(self):
-        result = NRF24.PA_ERROR
         power = self.read_register(NRF24.RF_SETUP) & (_BV(NRF24.RF_PWR_LOW) | _BV(NRF24.RF_PWR_HIGH))
 
         if power == (_BV(NRF24.RF_PWR_LOW) | _BV(NRF24.RF_PWR_HIGH)):
-            result = NRF24.PA_MAX
+            return NRF24.PA_MAX
         elif power == _BV(NRF24.RF_PWR_HIGH):
-            result = NRF24.PA_HIGH
+            return NRF24.PA_HIGH
         elif power == _BV(NRF24.RF_PWR_LOW):
-            result = NRF24.PA_LOW
+            return NRF24.PA_LOW
         else:
-            result = NRF24.PA_MIN
-        return result
+            return NRF24.PA_MIN
 
     def setDataRate(self, speed):
         result = False
@@ -681,19 +678,17 @@ class NRF24:
 
     def getDataRate(self):
         dr = self.read_register(NRF24.RF_SETUP) & (_BV(NRF24.RF_DR_LOW) | _BV(NRF24.RF_DR_HIGH))
-        result = 0xff
         # Order matters in our case below
         if dr == _BV(NRF24.RF_DR_LOW):
             # '10' = 250KBPS
-            result = NRF24.BR_250KBPS
+            return NRF24.BR_250KBPS
         elif dr == _BV(NRF24.RF_DR_HIGH):
             # '01' = 2MBPS
-            result = NRF24.BR_2MBPS
+            return NRF24.BR_2MBPS
         else:
             # '00' = 1MBPS
-            result = NRF24.BR_1MBPS
+            return NRF24.BR_1MBPS
 
-        return result
 
     def setCRCLength(self, length):
         config = self.read_register(NRF24.CONFIG) & ~( _BV(NRF24.CRC_16) | _BV(NRF24.CRC_ENABLED))
