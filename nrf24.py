@@ -281,7 +281,7 @@ class NRF24:
 
         print status_str
 
-    def print_observe_tx(uint8_t value):
+    def print_observe_tx(self, value):
         tx_str = "OBSERVE_TX=0x{0:02x}: POLS_CNT={2:x} ARC_CNT={2:x}\r\n".format(
             value,
             (value >> NRF24.PLOS_CNT) & int("1111",2),
@@ -427,7 +427,7 @@ class NRF24:
         # Begin the write
         self.startWrite(buf)
 
-        timeout = 500 #ms to wait for timeout
+        timeout = self.getMaxTimeout() #ms to wait for timeout
         sent_at = int(round(time.time() * 1000))
 
         while True:
