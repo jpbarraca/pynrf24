@@ -281,6 +281,14 @@ class NRF24:
 
         print status_str
 
+    def print_observe_tx(uint8_t value):
+        tx_str = "OBSERVE_TX=0x{0:02x}: POLS_CNT={2:x} ARC_CNT={2:x}\r\n".format(
+            value,
+            (value >> NRF24.PLOS_CNT) & int("1111",2),
+            (value >> NRF24.ARC_CNT)  & int("1111",2)
+            )
+        print tx_str
+
     def print_byte_register(self, name, reg, qty=1):
         extra_tab = '\t' if len(name) < 8 else 0
         print "%s\t%c =" % (name, extra_tab),
@@ -309,6 +317,9 @@ class NRF24:
     def setChannel(self, channel):
         self.channel = min(max(0, channel), NRF24.MAX_CHANNEL)
         self.write_register(NRF24.RF_CH, self.channel)
+
+    def getChannel(self):
+        return self.read_register(NRF24.RF_CH)
 
     def setPayloadSize(self, size):
         self.payload_size = min(max(size, 1), NRF24.MAX_PAYLOAD_SIZE)
@@ -394,10 +405,6 @@ class NRF24:
         if self.pipe0_reading_address:
             self.write_register(self.RX_ADDR_P0, self.pipe0_reading_address, 5)
 
-        # Flush buffers
-        self.flush_rx()
-        self.flush_tx()
-
         # Go!
         self.ce(NRF24.HIGH)
 
@@ -414,6 +421,7 @@ class NRF24:
 
     def powerUp(self):
         self.write_register(NRF24.CONFIG, self.read_register(NRF24.CONFIG) & _BV(NRF24.PWR_UP))
+        time.sleep(150 / 1000000.0)
 
     def write(self, buf):
         # Begin the write
@@ -437,28 +445,18 @@ class NRF24:
         if what['rx_ready']:
             self.ack_payload_length = self.getDynamicPayloadSize()
 
-        # Yay, we are done.
-
-        # Power down
-        self.powerDown()
-
-        # Flush buffers (Is this a relic of past experimentation, and not needed anymore??)
-        self.flush_tx()
-
         return result
 
     def startWrite(self, buf):
         # Transmitter power-up
         self.write_register(NRF24.CONFIG, (self.read_register(NRF24.CONFIG) | _BV(NRF24.PWR_UP) ) & ~_BV(NRF24.PRIM_RX))
 
-        time.sleep(150 / 1000000.0)
-
         # Send the payload
         self.write_payload(buf)
 
         # Allons!
         self.ce(NRF24.HIGH)
-        time.sleep(15 / 1000000.0)
+        time.sleep(10 / 1000000.0)
         self.ce(NRF24.LOW)
 
     def getDynamicPayloadSize(self):
@@ -546,6 +544,12 @@ class NRF24:
             self.write_register(NRF24.EN_RXADDR,
                                 self.read_register(NRF24.EN_RXADDR) | _BV(NRF24.child_pipe_enable[child]))
 
+
+    def closeReadingPipe(self, pipe):
+        self.write_register(NRF24.EN_RXADDR,
+            self.read_register(EN_RXADDR) & ~_BV(NRF24.child_pipe_enable[pipe]))
+
+
     def toggle_features(self):
         buf = [NRF24.ACTIVATE, 0x73]
         self.spidev.xfer2(buf)
@@ -595,14 +599,16 @@ class NRF24:
         self.spidev.xfer2(txbuffer)
 
     def isAckPayloadAvailable(self):
-        return False
+        result = self.ack_payload_available
+        self.ack_payload_available = False
+        return result
 
     def isPVariant(self):
         return self.p_variant
 
     def setAutoAck(self, enable):
         if enable:
-            self.write_register(NRF24.EN_AA, 0x3F)
+            self.write_register(NRF24.EN_AA, int('111111',2))
         else:
             self.write_register(NRF24.EN_AA, 0)
 
@@ -733,3 +739,11 @@ class NRF24:
 
     def setRetries(self, delay, count):
         self.write_register(NRF24.SETUP_RETR, (delay & 0xf) << NRF24.ARD | (count & 0xf) << NRF24.ARC)
+
+
+    def getRetries(self):
+        return self.read_register(NRF24.SETUP_RETR)
+
+    def getMaxTimeout(self):
+        retries = self.getRetries()
+        return ((250+(250*((retries& 0xf0)>>4 ))) * (retries & 0x0f))
