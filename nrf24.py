@@ -221,7 +221,7 @@ class NRF24:
         else:
             raise Exception("Value must be int or list")
 
-        return self.spidev.xfer2(buffer)[0]
+        return self.spidev.xfer2(buf)[0]
 
 
     def write_payload(self, buf):
