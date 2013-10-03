@@ -18,8 +18,8 @@ Most of the information there will also be valid to this library.
 Tested in a BeagleBoneBlack using spi0 and NRF24L01+ radios.
 Should work without problems in a Raspberry Pi or with NRF24L01 (non +) radios.
 
-Do not forget to check this great tutorial: http://www.diyembedded.com/tutorials/nrf24l01_0/nrf24l01_tutorial_0.pdf
-or the original datasheet: http://www.nordicsemi.com/eng/Products/2.4GHz-RF/nRF24L01
+Do not forget to check this [great tutorial](http://www.diyembedded.com/tutorials/nrf24l01_0/nrf24l01_tutorial_0.pdf)
+or the [original datasheet](http://www.nordicsemi.com/eng/Products/2.4GHz-RF/nRF24L01)
 
 
 Contact
