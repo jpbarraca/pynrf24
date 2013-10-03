@@ -262,10 +262,10 @@ class NRF24:
         return 0
 
     def flush_rx(self):
-        self.spidev.xfer2([NRF24.FLUSH_RX])
+        return self.spidev.xfer2([NRF24.FLUSH_RX])[0]
 
     def flush_tx(self):
-        self.spidev.xfer2([NRF24.FLUSH_TX])
+        return self.spidev.xfer2([NRF24.FLUSH_TX])[0]
 
     def get_status(self):
         return self.spidev.xfer2([NRF24.NOP])[0]
