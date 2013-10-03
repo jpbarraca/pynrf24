@@ -1,13 +1,7 @@
 pynrf24
 =======
 
-Python port of the RF24 (https://github.com/maniacbug/RF24/) library for NRF24L01+ radios
-
-
-Introduction
-------------
-
-This is a port of the library developed by maniacbug for the NRF24L01 radios with Arduino.
+Python port of the RF24 (https://github.com/maniacbug/RF24/) library for NRF24L01+ radios, adapted for the BeagleBone Black and the Raspberry Pi.
 
 All methods were ported and most methods prototypes were kept similar. This should facilitate the adaptation of existing code.
 Limitations were also ported and unfortunately some bugs may have been introduced.
@@ -26,15 +20,15 @@ Contact
 -------
 
 For any information regarding this library you can contact me at jpbarraca at gmail
-
+Improvements to the code base are also welcome.
 
 Requirements
 ------------
 
  * Python 2
- * SPI Enabled on the device: http://hipstercircuits.com/enable-spi-with-device-tree-on-beaglebone-black-copy-paste/
+ * SPI Enabled on the device: check the spi directory in the repository
  * SPI communication requires spidev:  https://pypi.python.org/pypi/spidev
- * GPIO access requires Adafruit BBIO library: https://github.com/adafruit/adafruit-beaglebone-io-python
+ * BBB: GPIO access requires Adafruit BBIO library: https://github.com/adafruit/adafruit-beaglebone-io-python
 
 Wiring
 ------
@@ -89,6 +83,19 @@ Receiving Data:
 
 	#Print the buffer
 	print recv_buffer
+
+
+Caveats
+-------
+
+Performance with this driver (as well as with any other Python driver) may be lower than expected.
+Python is a high level language and there is too much stuff going on (e.g, Garbage Collection)
+for timing constrains to be respected. There is no assurance that you can transmit at 2MBits/s,
+or even at 250KBits/s. Actually, the hardware can only provide maximum bitrates
+when using large packets, no CRC, and without any retransmissions. Which means that radios must
+be very close to each other.
+
+It works great in my case. Use AS-IS, but remember that YMMV.
 
 
 License

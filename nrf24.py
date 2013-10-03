@@ -3,8 +3,7 @@
 # Author: Joao Paulo Barraca <jpbarraca@gmail.com>
 #
 
-import Adafruit_BBIO.GPIO as GPIO #Uncomment if using BeagleBone Black
-#import Ras.PI as GPIO   #Uncomment if using Raspberry Pi
+import Adafruit_BBIO.GPIO as GPIO 
 import spidev
 import time
 import sys
