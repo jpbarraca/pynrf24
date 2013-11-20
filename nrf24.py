@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -432,8 +435,7 @@ class NRF24:
 
         while True:
             status = self.read_register(NRF24.OBSERVE_TX, 1)
-            if (status & (_BV(NRF24.TX_DS) | _BV(NRF24.MAX_RT))) or 
-                (time.time() - sent_at > timeout ):
+            if (status & (_BV(NRF24.TX_DS) | _BV(NRF24.MAX_RT))) or (time.time() - sent_at > timeout ):
                 break
             time.sleep(10 / 1000000.0) 
 
