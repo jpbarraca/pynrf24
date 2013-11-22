@@ -19,7 +19,8 @@ or the [original datasheet](http://www.nordicsemi.com/eng/Products/2.4GHz-RF/nRF
 Contact
 -------
 
-For any information regarding this library you can contact me at jpbarraca at gmail
+For any information regarding this library you can contact me at jpbarraca at gmail.
+
 Improvements to the code base are also welcome.
 
 Requirements
