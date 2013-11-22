@@ -36,14 +36,14 @@ Wiring
 
     nRF24L01+ (top view)     BeagleBoneBlack
 	+-+-+                    (header)
-	|8|7|	1: GND      ->   P8 GND (P8_1 and P8_2)
-	+-+-+	2: 3.3V     ->   P8 3.3v (P8_3 and P8_4)
-	|6|5|	3: CE       ->   P8_15 (configurable)
-	+-+-+	4: CSN      ->   SPI0.CS (P8_17)
-	|4|3|	5: SCKL     ->   SPI0.SCLK (P8_22)
-	+-+-+	6: MOSI     ->   SPI0.D1 (P8_18)
-	|2|1|	7: MISO     ->   SPI0.D0 (P8_21)
-	+-+-+	8: IRQ      ->   P8_16 (configurable)
+	|8|7|	1: GND      ->   P9 GND (P9_1 and P9_2)
+	+-+-+	2: 3.3V     ->   P9 3.3v (P9_3 and P9_4)
+	|6|5|	3: CE       ->   P9_15 (configurable)
+	+-+-+	4: CSN      ->   SPI0.CS (P9_17)
+	|4|3|	5: SCKL     ->   SPI0.SCLK (P9_22)
+	+-+-+	6: MOSI     ->   SPI0.D1 (P9_18)
+	|2|1|	7: MISO     ->   SPI0.D0 (P9_21)
+	+-+-+	8: IRQ      ->   P9_16 (configurable)
 
 Examples
 --------
@@ -53,7 +53,7 @@ Initialization:
 		pipes = [ [0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2] ]
 
 		radio = NRF24()
-		radio.begin(1,0,"P8_15", "P8_16") #Set CE and IRQ pins
+		radio.begin(1,0,"P9_15", "P9_16") #Set CE and IRQ pins
 		radio.setRetries(15,15)
 		radio.setPayloadSize(8)
 		radio.setChannel(0x60)
