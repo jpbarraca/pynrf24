@@ -18,7 +18,7 @@
 # Select the most appropriate for you by uncommenting one of the 
 # two imports.
 # For Raspberry Pi
-#import Ras.PI as GPIO
+#import Ras.GPIO as GPIO
 
 #For BBBB
 import Adafruit_BBIO.GPIO as GPIO
