@@ -165,8 +165,8 @@ class NRF24:
     child_pipe_enable = [ERX_P0, ERX_P1, ERX_P2, ERX_P3, ERX_P4, ERX_P5]
 
     def __init__(self):
-        self.ce_pin = "P9_15"
-        self.irq_pin = "P9_16"
+        self.ce_pin = "P8_15"
+        self.irq_pin = "P8_16"
         self.channel = 76
         self.data_rate = NRF24.BR_1MBPS
         self.wide_band = False # 2Mbs data rate in use?
