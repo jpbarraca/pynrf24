@@ -34,15 +34,15 @@ Requirements
 Wiring
 ------
 
-    nRF24L01+             BeagleBoneBlack
+    nRF24L01+ (top view)     BeagleBoneBlack
 	+-+-+                    (header)
-	|8|7|	1: GND      ->   P8 GND
-	+-+-+	2: 3.3V     ->   P8 3.3v
+	|8|7|	1: GND      ->   P8 GND (P8_1 and P8_2)
+	+-+-+	2: 3.3V     ->   P8 3.3v (P8_3 and P8_4)
 	|6|5|	3: CE       ->   P8_15 (configurable)
-	+-+-+	4: CSN      ->   SPI0.CS
-	|4|3|	5: SCKL     ->   SPI0.SCK
-	+-+-+	6: MOSI     ->   SPI0.D1
-	|2|1|	7: MISO     ->   SPI0.D0
+	+-+-+	4: CSN      ->   SPI0.CS (P8_17)
+	|4|3|	5: SCKL     ->   SPI0.SCLK (P8_22)
+	+-+-+	6: MOSI     ->   SPI0.D1 (P8_18)
+	|2|1|	7: MISO     ->   SPI0.D0 (P8_21)
 	+-+-+	8: IRQ      ->   P8_16 (configurable)
 
 Examples
