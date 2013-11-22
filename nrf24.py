@@ -14,8 +14,15 @@
 # Python port of Maniacbug NRF24L01 library
 # Author: Joao Paulo Barraca <jpbarraca@gmail.com>
 #
+# BeagleBoneBlack and Raspberry Pi use different GPIO access methods.
+# Select the most appropriate for you by uncommenting one of the 
+# two imports.
+# For Raspberry Pi
+#import Ras.PI as GPIO
 
+#For BBBB
 import Adafruit_BBIO.GPIO as GPIO
+
 import spidev
 import time
 import sys
