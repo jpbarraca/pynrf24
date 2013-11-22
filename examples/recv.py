@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Example program to receive packets from the radio
 #
@@ -9,7 +11,7 @@ import time
 pipes = [[0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]]
 
 radio = NRF24()
-radio.begin(1, 0, "P9_23", "P9_24")
+radio.begin(1, 0, "P8_23", "P8_24")
 
 radio.setRetries(15,15)
 
