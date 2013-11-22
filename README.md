@@ -53,7 +53,7 @@ Initialization:
 		pipes = [ [0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2] ]
 
 		radio = NRF24()
-		radio.begin(1,0,"P9_15", "P9_16") #Set CE and IRQ pins
+		radio.begin(1,0,"P8_15", "P8_16") #Set CE and IRQ pins
 		radio.setRetries(15,15)
 		radio.setPayloadSize(8)
 		radio.setChannel(0x60)
@@ -89,12 +89,13 @@ Receiving Data:
 Caveats
 -------
 
-Performance with this driver (as well as with any other Python driver) may be lower than expected.
+Performance with this driver (as well as with any other Python "driver") may be lower than expected.
 Python is a high level language and there is too much stuff going on (e.g, Garbage Collection)
 for timing constrains to be respected. There is no assurance that you can transmit at 2MBits/s,
 or even at 250KBits/s. Actually, the hardware can only provide maximum bitrates
 when using large packets, no CRC, and without any retransmissions. Which means that radios must
-be very close to each other.
+be very close to each other, and in practice you will never get the advertised bitrate. Actually,
+maybe Python actually isn't a bottleneck :).
 
 It works great in my case. Use AS-IS, but remember that YMMV.
 
