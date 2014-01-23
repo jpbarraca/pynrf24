@@ -406,7 +406,11 @@ class NRF24:
         # Flush buffers
         self.flush_rx()
         self.flush_tx()
-
+    
+    def end(self):
+        if self.spidev:
+            self.spidev.close()
+        
     def startListening(self):
         self.write_register(NRF24.CONFIG, self.read_register(NRF24.CONFIG) | _BV(NRF24.PWR_UP) | _BV(NRF24.PRIM_RX))
         self.write_register(NRF24.STATUS, _BV(NRF24.RX_DR) | _BV(NRF24.TX_DS) | _BV(NRF24.MAX_RT))
