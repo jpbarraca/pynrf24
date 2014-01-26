@@ -12,7 +12,7 @@ import time
 pipes = [[0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2]]
 
 radio = NRF24()
-radio.begin(1, 0, "P8_15", "P8_16") #Set CE and IRQ pins
+radio.begin(1, 0, "P8_23", "P8_24") #Set CE and IRQ pins
 radio.setRetries(15,15)
 radio.setPayloadSize(8)
 radio.setChannel(0x60)
