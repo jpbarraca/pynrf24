@@ -410,6 +410,7 @@ class NRF24:
     def end(self):
         if self.spidev:
             self.spidev.close()
+            self.spidev = None
         
     def startListening(self):
         self.write_register(NRF24.CONFIG, self.read_register(NRF24.CONFIG) | _BV(NRF24.PWR_UP) | _BV(NRF24.PRIM_RX))
