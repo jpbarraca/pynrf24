@@ -15,10 +15,10 @@
 # Author: Joao Paulo Barraca <jpbarraca@gmail.com>
 #
 # BeagleBoneBlack and Raspberry Pi use different GPIO access methods.
-# Select the most appropriate for you by uncommenting one of the 
+# Select the most appropriate for you by uncommenting one of the
 # two imports.
 # For Raspberry Pi
-#import Ras.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 #For BBBB
 import Adafruit_BBIO.GPIO as GPIO
@@ -195,6 +195,11 @@ class NRF24:
     def irqWait(self):
         # A race condition may occur here.
         # TODO: Should set a timeout
+        # CHANGE: detect module name because wait_for_edge is not available in
+        # other libraries
+        if GPIO.__name__ != "Adafruit_BBIO.GPIO":
+            return
+
         if GPIO.input(self.irq_pin) == 0:
             return
 
@@ -406,12 +411,12 @@ class NRF24:
         # Flush buffers
         self.flush_rx()
         self.flush_tx()
-    
+
     def end(self):
         if self.spidev:
             self.spidev.close()
             self.spidev = None
-        
+
     def startListening(self):
         self.write_register(NRF24.CONFIG, self.read_register(NRF24.CONFIG) | _BV(NRF24.PWR_UP) | _BV(NRF24.PRIM_RX))
         self.write_register(NRF24.STATUS, _BV(NRF24.RX_DR) | _BV(NRF24.TX_DS) | _BV(NRF24.MAX_RT))
@@ -449,7 +454,7 @@ class NRF24:
             status = self.read_register(NRF24.OBSERVE_TX, 1)
             if (status & (_BV(NRF24.TX_DS) | _BV(NRF24.MAX_RT))) or (time.time() - sent_at > timeout ):
                 break
-            time.sleep(10 / 1000000.0) 
+            time.sleep(10 / 1000000.0)
 
         what = self.whatHappened()
 
