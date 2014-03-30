@@ -192,7 +192,7 @@ class NRF24:
             GPIO.output(self.ce_pin, GPIO.LOW)
         return
 
-    def irqWait(self):
+    def irqWait(self, timeout = 30000):
         # CHANGE: detect module name because wait_for_edge is not available in
         # other libraries
         if GPIO.__name__ != "Adafruit_BBIO.GPIO":
