@@ -30,6 +30,8 @@ Requirements
  * SPI Enabled on the device: check the spi directory in the repository
  * SPI communication requires spidev:  https://pypi.python.org/pypi/spidev
  * BBB: GPIO access requires Adafruit BBIO library: https://github.com/adafruit/adafruit-beaglebone-io-python
+ * BBB: If using GPIO IRQ detection, a custom version of the Adafruit library must be used https://github.com/jpbarraca/adafruit-beaglebone-io-python . A patch was already submitted to Adafruit.
+ 
 
 Wiring
 ------
