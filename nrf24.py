@@ -256,13 +256,14 @@ class NRF24:
 
         if blank_len != 0:
             blank = [0x00 for i in range(blank_len)]
-            buf.extend(blank)
+            txbuffer.extend(blank)
 
         return self.spidev.xfer2(txbuffer)
 
-
-    def read_payload(self, buf):
-        data_len = min(self.payload_size, len(buf))
+    def read_payload(self, buf, buf_len=-1):
+        if buf_len < 0:
+            buf_len = self.payload_size
+        data_len = min(self.payload_size, buf_len)
         blank_len = 0
         if not self.dynamic_payloads_enabled:
             blank_len = self.payload_size - data_len
@@ -272,8 +273,8 @@ class NRF24:
 
         payload = self.spidev.xfer2(txbuffer)
         del buf[:]
-        buf.extend(payload[1:])
-        return 0
+        buf.extend(payload[1:data_len + 1])
+        return data_len
 
     def flush_rx(self):
         return self.spidev.xfer2([NRF24.FLUSH_RX])[0]
@@ -285,7 +286,7 @@ class NRF24:
         return self.spidev.xfer2([NRF24.NOP])[0]
 
     def print_status(self, status):
-        status_str = "STATUS\t = 0x{0:02x} RX_DR={1:x} TX_DS={2:x} MAX_RT={3:x} RX_P_NO={4:x} TX_FULL={5:x}\r\n".format(
+        status_str = "STATUS\t = 0x{0:02x} RX_DR={1:x} TX_DS={2:x} MAX_RT={3:x} RX_P_NO={4:x} TX_FULL={5:x}".format(
             status,
             1 if status & _BV(NRF24.RX_DR) else 0,
             1 if status & _BV(NRF24.TX_DS) else 0,
@@ -450,7 +451,8 @@ class NRF24:
         sent_at = time.time()
 
         while True:
-            status = self.read_register(NRF24.OBSERVE_TX, 1)
+            #status = self.read_register(NRF24.OBSERVE_TX, 1)
+            status = self.get_status()
             if (status & (_BV(NRF24.TX_DS) | _BV(NRF24.MAX_RT))) or (time.time() - sent_at > timeout ):
                 break
             time.sleep(10 / 1000000.0)
@@ -515,9 +517,9 @@ class NRF24:
 
         return result
 
-    def read(self, buf):
+    def read(self, buf, buf_len=-1):
         # Fetch the payload
-        self.read_payload(buf)
+        self.read_payload(buf, buf_len)
 
         # was this the last of the data available?
         return self.read_register(NRF24.FIFO_STATUS) & _BV(NRF24.RX_EMPTY)
