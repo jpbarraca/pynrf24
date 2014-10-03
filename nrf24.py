@@ -26,6 +26,8 @@ import Adafruit_BBIO.GPIO as GPIO
 import spidev
 import time
 import sys
+if sys.version > '3':
+    long = int
 
 
 def _BV(x):
@@ -285,8 +287,11 @@ class NRF24:
     def get_status(self):
         return self.spidev.xfer2([NRF24.NOP])[0]
 
+    def print_single_status_line(self, name, value):
+        print("{0:<16}= {1}".format(name, value))
+
     def print_status(self, status):
-        status_str = "STATUS\t = 0x{0:02x} RX_DR={1:x} TX_DS={2:x} MAX_RT={3:x} RX_P_NO={4:x} TX_FULL={5:x}".format(
+        status_str = "0x{0:02x} RX_DR={1:x} TX_DS={2:x} MAX_RT={3:x} RX_P_NO={4:x} TX_FULL={5:x}".format(
             status,
             1 if status & _BV(NRF24.RX_DR) else 0,
             1 if status & _BV(NRF24.TX_DS) else 0,
@@ -294,7 +299,7 @@ class NRF24:
             ((status >> NRF24.RX_P_NO) & int("111", 2)),
             1 if status & _BV(NRF24.TX_FULL) else 0)
 
-        print status_str
+        self.print_single_status_line("STATUS", status_str)
 
     def print_observe_tx(self, value):
         tx_str = "OBSERVE_TX=0x{0:02x}: POLS_CNT={2:x} ARC_CNT={2:x}\r\n".format(
@@ -302,32 +307,15 @@ class NRF24:
             (value >> NRF24.PLOS_CNT) & int("1111",2),
             (value >> NRF24.ARC_CNT)  & int("1111",2)
             )
-        print tx_str
+        print(tx_str)
 
     def print_byte_register(self, name, reg, qty=1):
-        extra_tab = '\t' if len(name) < 8 else 0
-        print "%s\t%c =" % (name, extra_tab),
-        while qty > 0:
-            print "0x%02x" % (self.read_register(reg)),
-            qty -= 1
-            reg += 1
-
-        print ""
+        registers = [ "0x{:0>2x}".format(self.read_register(reg+r)) for r in range(0, qty) ]
+        self.print_single_status_line(name, " ".join(registers))
 
     def print_address_register(self, name, reg, qty=1):
-        extra_tab = '\t' if len(name) < 8 else 0
-        print "%s\t%c =" % (name, extra_tab),
-
-        while qty > 0:
-            qty -= 1
-            buf = reversed(self.read_register(reg, 5))
-            reg += 1
-            sys.stdout.write(" 0x"),
-            for i in buf:
-                sys.stdout.write("%02x" % i)
-
-        print ""
-
+        address_registers = [ "0x{4:>2x}{3:>2x}{2:>2x}{1:>2x}{0:>2x}".format(*self.read_register(reg+r, 5)) for r in range(0, qty) ]
+        self.print_single_status_line(name, " ".join(address_registers))
 
     def setChannel(self, channel):
         self.channel = min(max(0, channel), NRF24.MAX_CHANNEL)
@@ -356,11 +344,10 @@ class NRF24:
         self.print_byte_register("CONFIG", NRF24.CONFIG)
         self.print_byte_register("DYNPD/FEATURE", NRF24.DYNPD, 2)
 
-        #
-        print "Data Rate\t = %s" % NRF24.datarate_e_str_P[self.getDataRate()]
-        print "Model\t\t = %s" % NRF24.model_e_str_P[self.isPVariant()]
-        print "CRC Length\t = %s" % NRF24.crclength_e_str_P[self.getCRCLength()]
-        print "PA Power\t = %s" % NRF24.pa_dbm_e_str_P[self.getPALevel()]
+        self.print_single_status_line("Data Rate", NRF24.datarate_e_str_P[self.getDataRate()])
+        self.print_single_status_line("Model", NRF24.model_e_str_P[self.isPVariant()])
+        self.print_single_status_line("CRC Length", NRF24.crclength_e_str_P[self.getCRCLength()])
+        self.print_single_status_line("PA Power", NRF24.pa_dbm_e_str_P[self.getPALevel()])
 
     def begin(self, major, minor, ce_pin, irq_pin):
         # Initialize SPI bus
