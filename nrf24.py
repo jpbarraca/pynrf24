@@ -17,11 +17,17 @@
 # BeagleBoneBlack and Raspberry Pi use different GPIO access methods.
 # Select the most appropriate for you by uncommenting one of the
 # two imports.
-# For Raspberry Pi
-#import RPi.GPIO as GPIO
 
-#For BBBB
-import Adafruit_BBIO.GPIO as GPIO
+try:
+    #For BBBB
+    import Adafruit_BBIO.GPIO as GPIO
+except ImportError:
+    try:
+        # For Raspberry Pi
+        import RPi.GPIO as GPIO
+    except ImportError:
+        raise ImportError('Neither RPi.GPIO nor Adafruit_BBIO.GPIO module found.')
+
 
 import spidev
 import time
