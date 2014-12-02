@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Pynrf24 by jpbarraca</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Pynrf24</h1>
+        <h2>Python port of the RF24 library for NRF24L01+ radios</h2>
+        <a href="https://github.com/jpbarraca/pynrf24" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a id="pynrf24" class="anchor" href="#pynrf24" aria-hidden="true"><span class="octicon octicon-link"></span></a>pynrf24</h1>
+
+<p>Python port of the RF24 (<a href="https://github.com/maniacbug/RF24/">https://github.com/maniacbug/RF24/</a>) library for NRF24L01+ radios, adapted for the BeagleBone Black and the Raspberry Pi.</p>
+
+<p>All methods were ported and most methods prototypes were kept similar. This should facilitate the adaptation of existing code.
+Limitations were also ported and unfortunately some bugs may have been introduced.</p>
+
+<p>For more information regarding how to use this library, check the RF24 documentation: <a href="http://maniacbug.github.io/RF24/">http://maniacbug.github.io/RF24/</a>
+Most of the information there will also be valid to this library.</p>
+
+<p>Tested in a BeagleBoneBlack using spi0 and NRF24L01+ radios.
+Should work without problems in a Raspberry Pi or with NRF24L01 (non +) radios.</p>
+
+<p>Do not forget to check this <a href="http://www.diyembedded.com/tutorials/nrf24l01_0/nrf24l01_tutorial_0.pdf">great tutorial</a>
+or the <a href="http://www.nordicsemi.com/eng/Products/2.4GHz-RF/nRF24L01">original datasheet</a></p>
+
+<h2>
+<a id="contact" class="anchor" href="#contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contact</h2>
+
+<p>For any information regarding this library you can contact me at jpbarraca at gmail.</p>
+
+<p>Improvements to the code base are also welcome.</p>
+
+<h2>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Requirements</h2>
+
+<ul>
+<li>Python 2</li>
+<li>SPI Enabled on the device: check the spi directory in the repository</li>
+<li>SPI communication requires spidev:  <a href="https://pypi.python.org/pypi/spidev">https://pypi.python.org/pypi/spidev</a>
+</li>
+<li>BBB: GPIO access requires Adafruit BBIO library: <a href="https://github.com/adafruit/adafruit-beaglebone-io-python">https://github.com/adafruit/adafruit-beaglebone-io-python</a>
+</li>
+<li>BBB: If using GPIO IRQ detection, a custom version of the Adafruit library must be used <a href="https://github.com/jpbarraca/adafruit-beaglebone-io-python">https://github.com/jpbarraca/adafruit-beaglebone-io-python</a> . A patch was already submitted to Adafruit.</li>
+</ul>
+
+<h2>
+<a id="wiring" class="anchor" href="#wiring" aria-hidden="true"><span class="octicon octicon-link"></span></a>Wiring</h2>
+
+<pre><code>nRF24L01+ (top view)     BeagleBoneBlack
++-+-+                    (header)
+|8|7|   1: GND      -&gt;   P9 GND (P9_1 and P9_2)
++-+-+   2: 3.3V     -&gt;   P9 3.3v (P9_3 and P9_4)
+|6|5|   3: CE       -&gt;   P9_15 (configurable)
++-+-+   4: CSN      -&gt;   SPI0.CS (P9_17)
+|4|3|   5: SCKL     -&gt;   SPI0.SCLK (P9_22)
++-+-+   6: MOSI     -&gt;   SPI0.D1 (P9_18)
+|2|1|   7: MISO     -&gt;   SPI0.D0 (P9_21)
++-+-+   8: IRQ      -&gt;   P9_16 (configurable)
+</code></pre>
+
+<h2>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples</h2>
+
+<p>Initialization:</p>
+
+<pre><code>    pipes = [ [0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2] ]
+
+    radio = NRF24()
+    radio.begin(1,0,"P9_15", "P9_16") #Set CE and IRQ pins
+    radio.setRetries(15,15)
+    radio.setPayloadSize(8)
+    radio.setChannel(0x60)
+    radio.setDataRate(NRF24.BR_250KBPS)
+    radio.setPALevel(NRF24.PA_MAX)
+    radio.openWritingPipe(pipes[0])
+    radio.openReadingPipe(1,pipes[1])
+
+    radio.printDetails()
+</code></pre>
+
+<p>Sending Data:</p>
+
+<pre><code>buffer = ['H','E','L','L','O']
+status = radio.write(buffer)
+</code></pre>
+
+<p>Receiving Data:</p>
+
+<pre><code>#Wait for data
+pipe =[0]
+while not radio.available(pipe):
+    time.sleep(10000/1000000.0)
+
+#Receive Data
+recv_buffer = []
+radio.read(recv_buffer)
+
+#Print the buffer
+print recv_buffer
+</code></pre>
+
+<h2>
+<a id="caveats" class="anchor" href="#caveats" aria-hidden="true"><span class="octicon octicon-link"></span></a>Caveats</h2>
+
+<p>Performance with this driver (as well as with any other Python "driver") may be lower than expected.
+Python is a high level language and there is too much stuff going on (e.g, Garbage Collection)
+for timing constrains to be respected. There is no assurance that you can transmit at 2MBits/s,
+or even at 250KBits/s. Actually, the hardware can only provide maximum bitrates
+when using large packets, no CRC, and without any retransmissions. Which means that radios must
+be very close to each other, and in practice you will never get the advertised bitrate. Actually,
+maybe Python actually isn't a bottleneck :).</p>
+
+<p>It works great in my case. Use AS-IS, but remember that YMMV.</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.</p>
+
+<p>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.</p>
+
+<p>You should have received a copy of the GNU General Public License
+along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/jpbarraca/pynrf24/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/jpbarraca/pynrf24/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/jpbarraca/pynrf24"></a> is maintained by <a href="https://github.com/jpbarraca">jpbarraca</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
