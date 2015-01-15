@@ -370,6 +370,17 @@ class NRF24:
         # Initialize SPI bus
         self.spidev = spidev.SpiDev()
         self.spidev.open(major, minor)
+        self.spidev.bits_per_word = 8
+        self.spidev.cshigh = False
+        self.spidev.loop = False
+        self.spidev.lsbfirst = False
+        try:
+            self.spidev.max_speed_hz = 10000000 #Maximum supported by NRF24L01+
+        except IOError:
+            pass # Hardware does not support this speed
+        self.spidev.mode = 0
+        self.spidev.threewire = False
+        
         self.ce_pin = ce_pin
         self.irq_pin = irq_pin
 
