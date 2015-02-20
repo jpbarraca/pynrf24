@@ -218,7 +218,7 @@ class NRF24(object):
         #self.ack_payload_available = False  # *< Whether there is an ack payload waiting
         #self.ack_payload_length = 5  # *< Dynamic size of pending ack payload.
         self.pipe0_reading_address = None  # *< Last address set on pipe 0 for reading.
-
+        self.last_error = None
 
     def end(self):
         self.set_ce(0)
@@ -353,7 +353,7 @@ class NRF24(object):
         self.print_single_status_line(name, " ".join(registers))
 
     def print_address_register(self, name, reg, qty=1):
-        address_registers = ["0x{0:>2x}{1:>2x}{2:>2x}{3:>2x}{4:>2x}".format(
+        address_registers = ["0x{0:>02x}{1:>02x}{2:>02x}{3:>02x}{4:>02x}".format(
             *self.read_register(reg+r, 5))
             for r in range(qty)]
 
@@ -415,23 +415,33 @@ class NRF24(object):
     def write(self, buf):
         """ Send a data packet.
             Returns true if the packet was transmitted sucessfully."""
+        self.last_error = None
         length = self.write_payload(buf)
         self.set_ce(1)
         time.sleep(10e-6)
         self.set_ce(0)
 
         # 57 bits preamble/address, data rate is kbit/s => *1000
-        packet_time = ((length + self.crc_length_cached) * 8 + 57)/(self.data_rate_cached*1000)
-        timeout = self.retries_cached * (packet_time + self.delay*1e-6)
-        sent_at = monotonic()
-        while monotonic() - sent_at < timeout:
+        packet_time = float((length + self.crc_length_cached) * 8 + 57)/(self.data_rate_cached*1000)
+
+        #timeout = self.retries_cached * (packet_time + self.delay*1e-6)
+        # Actually the measure timeouts are always a bit longer than the calculated
+        # ones. So just stick with a sane value with a bit of safety margin
+        # 2M: 0.1s
+        # 1M: 0.2s
+        # 250k: 0.8s
+        timeout = monotonic() + 200. / self.data_rate_cached
+        while monotonic() < timeout:
             time.sleep(packet_time)
             status = self.status()
             if status & NRF24.TX_DS:
                 return True
             if status & NRF24.MAX_RT:
+                self.last_error = 'MAX_RT'
                 break
             time.sleep(self.delay*1e-6)
+        if self.last_error is None:
+            self.last_error = 'TIMEOUT'
         self.flush_tx() # Avoid leaving the payload in tx fifo
         return False
 
