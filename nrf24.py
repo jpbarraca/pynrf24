@@ -100,6 +100,9 @@ class NRF24(object):
     ARC_CNT = 0
     RX_P_NO = 1
 
+    # Masks
+    RX_P_NO_MASK = 0x0E
+
     # Instruction Mnemonics
     R_REGISTER = 0x00
     W_REGISTER = 0x20
@@ -450,32 +453,29 @@ class NRF24(object):
         return self.spidev.xfer2([NRF24.R_RX_PL_WID, NRF24.NOP])[1]
 
     def available(self, pipe_num=None, irq_wait=False, irq_timeout=30000):
-        if not pipe_num:
-            pipe_num = []
-
         status = self.status()
         result = False
 
         # Sometimes the radio specifies that there is data in one pipe but
         # doesn't set the RX flag...
-        if status & NRF24.RX_DR or (status & 0b00001110 != 0b00001110):
+        if status & NRF24.RX_DR or (status & NRF24.RX_P_NO_MASK != NRF24.RX_P_NO_MASK):
             result = True
         else:
             if irq_wait:  # Will use IRQ wait
                 if self.irq_wait(irq_timeout):  # Do we have a packet?
                     status = self.status()  # Seems like we do!
-                    if status & NRF24.RX_DR or (status & 0b00001110 != 0b00001110):
+                    if status & NRF24.RX_DR or (status & NRF24.RX_P_NO_MASK != NRF24.RX_P_NO_MASK):
                         result = True
 
-        if result:
+        del pipe_num[:]
+        if result and pipe_num is not None:
             # If the caller wants the pipe number, include that
-            if len(pipe_num) >= 1:
-                pipe_num[0] = (status >> NRF24.RX_P_NO) & 0b00000111
+            pipe_num.append((status & NRF24.RX_P_NO_MASK) >> NRF24.RX_P_NO)
 
-                # Clear the status bit
+        # Clear the status bit
 
-                # ??? Should this REALLY be cleared now?  Or wait until we
-                # actually READ the payload?
+        # ??? Should this REALLY be cleared now?  Or wait until we
+        # actually READ the payload?
         self.write_register(NRF24.STATUS, NRF24.RX_DR)
 
         # Handle ack payload receipt
