@@ -393,6 +393,9 @@ class NRF24(object):
         # Restore the pipe0 address, if exists
         if self.pipe0_reading_address:
             self.write_register(self.RX_ADDR_P0, self.pipe0_reading_address)
+        else:
+            # Disable pipe 0 (only used for auto-ack)
+            self.write_register(NRF24.EN_RXADDR, self.read_register(NRF24.EN_RXADDR) & 0xFE)
 
         # Go!
         self.set_ce(1)
@@ -400,13 +403,18 @@ class NRF24(object):
         # happen during this time
 
     def stop_listening(self):
+        self._check_settings()
         self.set_ce(0)
         self.flush_tx()
         self.flush_rx()
+        self.clear_irq_flags()
 
         # Enable TX
         self.write_register(NRF24.CONFIG,
                             (self.read_register(NRF24.CONFIG) | NRF24.PWR_UP) & ~NRF24.PRIM_RX)
+
+        # Enable pipe 0 for auto-ack
+        self.write_register(NRF24.EN_RXADDR, self.read_register(NRF24.EN_RXADDR) | 1)
 
     def power_down(self):
         self.write_register(NRF24.CONFIG, self.read_register(NRF24.CONFIG) & ~NRF24.PWR_UP)
@@ -561,9 +569,9 @@ class NRF24(object):
 
         self.spidev.xfer2(txbuffer)
 
-    def set_auto_ack(self, enable):
+    def set_auto_ack(self, enable, mask=0x3F):
         if enable:
-            self.write_register(NRF24.EN_AA, 0x3F)
+            self.write_register(NRF24.EN_AA, mask)
         else:
             self.write_register(NRF24.EN_AA, 0)
 
