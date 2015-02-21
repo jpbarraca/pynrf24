@@ -426,6 +426,7 @@ class NRF24(object):
     def write(self, buf):
         """ Send a data packet.
             Returns true if the packet was transmitted sucessfully."""
+        self.clear_irq_flags()
         self.last_error = None
         length = self.write_payload(buf)
         self.set_ce(1)
