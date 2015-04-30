@@ -1,27 +1,25 @@
 pynrf24
 =======
 
-Python port of the RF24 (https://github.com/maniacbug/RF24/) library for NRF24L01+ radios, adapted for the BeagleBone Black, the Banana Pi and the Raspberry Pi.
+Python port of the RF24 (https://github.com/maniacbug/RF24/) library for NRF24L01+ radios, adapted for the BeagleBone Black and the Raspberry Pi.
+
+All methods were ported and most methods prototypes were kept similar. This should facilitate the adaptation of existing code.
+Limitations were also ported and unfortunately some bugs may have been introduced.
 
 For more information regarding how to use this library, check the RF24 documentation: http://maniacbug.github.io/RF24/
 Most of the information there will also be valid to this library.
 
-Tested in a Banana Pi using spi0 and NRF24L01+ radios.
+Tested in a BeagleBoneBlack using spi0 and NRF24L01+ radios.
 Should work without problems in a Raspberry Pi or with NRF24L01 (non +) radios.
 
 Do not forget to check this [great tutorial](http://www.diyembedded.com/tutorials/nrf24l01_0/nrf24l01_tutorial_0.pdf)
 or the [original datasheet](http://www.nordicsemi.com/eng/Products/2.4GHz-RF/nRF24L01)
 
 
-Note
-----
-This library uses a different convention of mac adresses compared to the original library.
-The byte order is _NOT_ reversed before sending it to the NRF24L01.
-
 Contact
 -------
 
-For any information regarding this library you can open tickets on Github.
+For any information regarding this library you can contact me at jpbarraca at gmail.
 
 Improvements to the code base are also welcome.
 
@@ -33,7 +31,7 @@ Requirements
  * SPI communication requires spidev:  https://pypi.python.org/pypi/spidev
  * BBB: GPIO access requires Adafruit BBIO library: https://github.com/adafruit/adafruit-beaglebone-io-python
  * BBB: If using GPIO IRQ detection, a custom version of the Adafruit library must be used https://github.com/jpbarraca/adafruit-beaglebone-io-python . A patch was already submitted to Adafruit.
-
+ 
 
 Wiring
 ------
@@ -54,35 +52,40 @@ Examples
 
 Initialization:
 
-    mac = "TEST1" # or mac = [0xe7, 0xe7, 0xe7, 0xe7, 0xe7]
-    radio = NRF24(spi=(0,0), ce_pin="P9_15", irq_pin="P9_16")
-    radio.data_rate = 2000 #kbps
-    radio.crc_length = 2 #bytes
-    radio.channel = 0x60
-    radio.dbm = 0
-    radio.enable_dynamic_payloads()
-    # or
-    radio.set_auto_ack(1)
-    radio.open_writing_pipe(mac)
-    radio.open_reading_pipe(0, mac)
-    radio.print_details()
+		pipes = [ [0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2] ]
+
+		radio = NRF24()
+		radio.begin(1,0,"P9_15", "P9_16") #Set CE and IRQ pins
+		radio.setRetries(15,15)
+		radio.setPayloadSize(8)
+		radio.setChannel(0x60)
+		radio.setDataRate(NRF24.BR_250KBPS)
+		radio.setPALevel(NRF24.PA_MAX)
+		radio.openWritingPipe(pipes[0])
+		radio.openReadingPipe(1,pipes[1])
+
+		radio.printDetails()
 
 
 Sending Data:
 
-    status = radio.write("HELLO")
-    #or
-    status = radio.write(['H','E','L','L','O'])
+    buffer = ['H','E','L','L','O']
+    status = radio.write(buffer)
 
 
 Receiving Data:
 
-    #Wait for data
-    pipe = [0]
-    while not radio.available(pipe):
-        time.sleep(0.01)
+	#Wait for data
+	pipe =[0]
+	while not radio.available(pipe):
+		time.sleep(10000/1000000.0)
 
-    print radio.read(recv_buffer)
+	#Receive Data
+	recv_buffer = []
+    radio.read(recv_buffer)
+
+	#Print the buffer
+	print recv_buffer
 
 
 Caveats
