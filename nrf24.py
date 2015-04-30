@@ -244,7 +244,7 @@ class NRF24:
             if length < 0:
                 length = len(value)
 
-            for i in xrange(min(len(value), length)):
+            for i in range(min(len(value), length)):
                 buf.append(int(value[len(value) - i - 1] & 0xff))
         else:
             raise Exception("Value must be int or list")
