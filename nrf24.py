@@ -372,6 +372,16 @@ class NRF24:
         self.spidev.open(major, minor)
         self.ce_pin = ce_pin
         self.irq_pin = irq_pin
+        self.spidev.bits_per_word = 8
+        self.spidev.cshigh = False
+        self.spidev.loop = False
+        self.spidev.lsbfirst = False
+        try:
+            self.spidev.max_speed_hz = 10000000  # Maximum supported by NRF24L01+
+        except IOError:
+            pass  # Hardware does not support this speed
+        self.spidev.mode = 0
+        self.spidev.threewire = False
 
         GPIO.setup(self.ce_pin, GPIO.OUT)
         GPIO.setup(self.irq_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
