@@ -269,11 +269,12 @@ class NRF24:
         if buf_len < 0:
             buf_len = self.payload_size
 
-        data_len = min(self.payload_size, buf_len)
-        blank_len = 0
-
         if not self.dynamic_payloads_enabled:
+            data_len = min(self.payload_size, buf_len)
             blank_len = self.payload_size - data_len
+        else:
+            data_len = self.getDynamicPayloadSize()
+            blank_len = 0
 
         txbuffer = [NRF24.R_RX_PAYLOAD] + [NRF24.NOP] * (blank_len + data_len + 1)
 
@@ -770,7 +771,6 @@ class NRF24:
         config = self.read_register(NRF24.CONFIG) & ~(NRF24.CRC_16 | NRF24.CRC_ENABLED)
         
         if length == NRF24.CRC_DISABLED:
-            config &= ~NRF24.CRC_ENABLED
             self.crc_length = 0
         elif length == NRF24.CRC_8:
             config |= NRF24.CRC_ENABLED
