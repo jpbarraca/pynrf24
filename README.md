@@ -1,16 +1,17 @@
 pynrf24
 =======
 
-Python port of the RF24 (https://github.com/maniacbug/RF24/) library for NRF24L01+ radios, adapted for the BeagleBone Black and the Raspberry Pi.
+Pure python port of the RF24 (https://github.com/maniacbug/RF24/) library for NRF24L01+ radios through SPI. 
 
-All methods were ported and most methods prototypes were kept similar. This should facilitate the adaptation of existing code.
-Limitations were also ported and unfortunately some bugs may have been introduced.
+All API methods were ported and prototypes were kept very similar. This should facilitate the reuse of code from the STM32 or Arduino platforms.
+The focus of this libary is to provide an API similar to the RF24 driver. Therefore, many things are not so pythonic, especially function names.
+The actually implementation is improved from the original RF24 code base and has many bug fixes solved, as well as improved performance.
 
 For more information regarding how to use this library, check the RF24 documentation: http://maniacbug.github.io/RF24/
-Most of the information there will also be valid to this library.
+Most of the information there will also be valid here.
 
-Tested in a BeagleBoneBlack using spi0 and NRF24L01+ radios.
-Should work without problems in a Raspberry Pi or with NRF24L01 (non +) radios.
+Tested on the the BeagleBone Black, Raspberry Pi, and Banana Pi.
+Should work without problems with NRF24L01 (non +) radios.
 
 Do not forget to check this [great tutorial](http://www.diyembedded.com/tutorials/nrf24l01_0/nrf24l01_tutorial_0.pdf)
 or the [original datasheet](http://www.nordicsemi.com/eng/Products/2.4GHz-RF/nRF24L01)
@@ -19,7 +20,7 @@ or the [original datasheet](http://www.nordicsemi.com/eng/Products/2.4GHz-RF/nRF
 Contact
 -------
 
-For any information regarding this library you can contact me at jpbarraca at gmail.
+For any information regarding this library please create an issue.
 
 Improvements to the code base are also welcome.
 
@@ -27,10 +28,9 @@ Requirements
 ------------
 
  * Python 2
- * SPI Enabled on the device: check the spi directory in the repository
  * SPI communication requires spidev:  https://pypi.python.org/pypi/spidev
  * BBB: GPIO access requires Adafruit BBIO library: https://github.com/adafruit/adafruit-beaglebone-io-python
- * BBB: If using GPIO IRQ detection, a custom version of the Adafruit library must be used https://github.com/jpbarraca/adafruit-beaglebone-io-python . A patch was already submitted to Adafruit.
+ * BBB: If using GPIO IRQ detection, a custom version of the Adafruit library can be used https://github.com/jpbarraca/adafruit-beaglebone-io-python in order to support a timeout when waiting for the IRQ line.
  
 
 Wiring
@@ -40,12 +40,12 @@ Wiring
 	+-+-+                    (header)
 	|8|7|	1: GND      ->   P9 GND (P9_1 and P9_2)
 	+-+-+	2: 3.3V     ->   P9 3.3v (P9_3 and P9_4)
-	|6|5|	3: CE       ->   P9_15 (configurable)
+	|6|5|	3: CE       ->   P9_23 (configurable)
 	+-+-+	4: CSN      ->   SPI0.CS (P9_17)
 	|4|3|	5: SCKL     ->   SPI0.SCLK (P9_22)
 	+-+-+	6: MOSI     ->   SPI0.D1 (P9_18)
 	|2|1|	7: MISO     ->   SPI0.D0 (P9_21)
-	+-+-+	8: IRQ      ->   P9_16 (configurable)
+	+-+-+	8: IRQ      ->   P9_24 (configurable)
 
 Examples
 --------
@@ -55,7 +55,7 @@ Initialization:
 		pipes = [ [0xe7, 0xe7, 0xe7, 0xe7, 0xe7], [0xc2, 0xc2, 0xc2, 0xc2, 0xc2] ]
 
 		radio = NRF24()
-		radio.begin(1,0,"P9_15", "P9_16") #Set CE and IRQ pins
+		radio.begin(1,0,"P9_23", "P9_24") #Set CE and IRQ pins
 		radio.setRetries(15,15)
 		radio.setPayloadSize(8)
 		radio.setChannel(0x60)
@@ -91,16 +91,12 @@ Receiving Data:
 Caveats
 -------
 
-Performance with this driver (as well as with any other Python "driver") may be lower than expected.
-Python is a high level language and there is too much stuff going on (e.g, Garbage Collection)
-for timing constrains to be respected. There is no assurance that you can transmit at 2MBits/s,
-or even at 250KBits/s. Actually, the hardware can only provide maximum bitrates
-when using large packets, no CRC, and without any retransmissions. Which means that radios must
-be very close to each other, and in practice you will never get the advertised bitrate. Actually,
-maybe Python actually isn't a bottleneck :).
+Performance with this driver (as well as with any other Python "driver") may be lower than expected. You will sacrifice performance for flexibility.
+Python is a high level language and there is too much stuff going on (e.g, Garbage Collection) for timing constrains to be respected. There is no assurance that you can transmit at 2Mbits/s.
+
+Benchmarks using an Nucleo 401RE and a BBB show a usable bitrate around 522kbits/s for a 2Mbit/s configuration. This was achieved using packets with 32 byte payloads, no CRC, and no Acknowledgements. According to the datasheet, for a 32 byte buffer, there will be more 65 bits of overhead, and the process will take at least 25.6us to upload the buffer, 130us for the PLL to lock, and 6us for the TX DS bit to be set. The total time spent will be of 160.5us + 25.6us + 130us + 6us = 322.1us, independently of the driver, and resulting in a usable bitrate of 795 Kb/s. Then you have to consider the latency of the SPI bus and code being executed at the uC. Actually, in this benchmark the SPI bus driver was taking 45% of the CPU.
 
 It works great in my case. Use AS-IS, but remember that YMMV.
-
 
 License
 -------
