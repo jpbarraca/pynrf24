@@ -69,8 +69,7 @@ Initialization:
 
 Sending Data:
 
-    buffer = ['H','E','L','L','O']
-    status = radio.write(buffer)
+    status = radio.write("HELLO")
 
 
 Receiving Data:
