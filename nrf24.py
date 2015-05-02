@@ -30,8 +30,15 @@ except ImportError:
     except ImportError:
         raise ImportError('Neither RPi.GPIO nor Adafruit_BBIO.GPIO module found.')
 
+# Try to Use spidev (which is faster) and then try Adafruit_BBIO
+try:
+    import spidev
+    ADAFRUID_BBIO_SPI = False
+except:
+    from Adafruit_BBIO.SPI import SPI
+    ADAFRUID_BBIO_SPI = True
 
-import spidev
+
 # Use a monotonic clock if available to avoid unwanted side effects from clock
 # changes
 try:
@@ -217,21 +224,34 @@ class NRF24:
 
     def begin(self, major, minor, ce_pin, irq_pin):
         # Initialize SPI bus
-        self.spidev = spidev.SpiDev()
-        self.spidev.open(major, minor)
-        self.ce_pin = ce_pin
-        self.irq_pin = irq_pin
-        self.spidev.bits_per_word = 8
+        
+        if ADAFRUID_BBIO_SPI:
+            self.spidev = SPI(major, minor) 
+            self.spidev.bpw = 8
+            try:
+                self.spidev.msh = 10000000  # Maximum supported by NRF24L01+
+            except IOError:
+                pass  # Hardware does not support this speed
+        else:
+            self.spidev = spidev.SpiDev()
+            self.spidev.open(major, minor)
+
+            self.spidev.bits_per_word = 8
+        
+
+            try:
+                self.spidev.max_speed_hz = 10000000  # Maximum supported by NRF24L01+
+            except IOError:
+                pass  # Hardware does not support this speed
+        
         self.spidev.cshigh = False
+        self.spidev.mode = 0
         self.spidev.loop = False
         self.spidev.lsbfirst = False
-
-        try:
-            self.spidev.max_speed_hz = 10000000  # Maximum supported by NRF24L01+
-        except IOError:
-            pass  # Hardware does not support this speed
-        self.spidev.mode = 0
         self.spidev.threewire = False
+        
+        self.ce_pin = ce_pin
+        self.irq_pin = irq_pin
 
         if self.ce_pin is not None:
             GPIO.setup(self.ce_pin, GPIO.OUT)
