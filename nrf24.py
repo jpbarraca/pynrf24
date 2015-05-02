@@ -135,7 +135,7 @@ class NRF24:
     TX_EMPTY = 4
     RX_FULL = 1
     RX_EMPTY = 0
-    
+
     DPL_P5 = 5
     DPL_P4 = 4
     DPL_P3 = 3
@@ -174,13 +174,12 @@ class NRF24:
 
     datarate_e_str_P = ["1MBPS", "2MBPS", "250KBPS"]
     model_e_str_P = ["nRF24L01", "nRF24l01+"]
-    crclength_e_str_P = ["Disabled","", "8 bits","", "16 bits"]
+    crclength_e_str_P = ["Disabled", "", "8 bits", "", "16 bits"]
     pa_dbm_e_str_P = ["PA_MIN", "PA_LOW", "PA_HIGH", "PA_MAX"]
-    
+
     @staticmethod
     def print_single_status_line(name, value):
         print("{0:<16}= {1}".format(name, value))
-
 
     @staticmethod
     def _to_8b_list(data):
@@ -219,14 +218,12 @@ class NRF24:
         # If all parameters are available, lets start the radio!
         if major is not None and minor is not None and irq_pin is not None:
             self.begin(major, minor, ce_pin, irq_pin)
-    
-
 
     def begin(self, major, minor, ce_pin, irq_pin):
         # Initialize SPI bus
-        
+
         if ADAFRUID_BBIO_SPI:
-            self.spidev = SPI(major, minor) 
+            self.spidev = SPI(major, minor)
             self.spidev.bpw = 8
             try:
                 self.spidev.msh = 10000000  # Maximum supported by NRF24L01+
@@ -237,25 +234,24 @@ class NRF24:
             self.spidev.open(major, minor)
 
             self.spidev.bits_per_word = 8
-        
 
             try:
                 self.spidev.max_speed_hz = 10000000  # Maximum supported by NRF24L01+
             except IOError:
                 pass  # Hardware does not support this speed
-        
+
         self.spidev.cshigh = False
         self.spidev.mode = 0
         self.spidev.loop = False
         self.spidev.lsbfirst = False
         self.spidev.threewire = False
-        
+
         self.ce_pin = ce_pin
         self.irq_pin = irq_pin
 
         if self.ce_pin is not None:
             GPIO.setup(self.ce_pin, GPIO.OUT)
-        
+
         GPIO.setup(self.irq_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         time.sleep(5 / 1000000.0)
@@ -304,7 +300,6 @@ class NRF24:
         self.flush_tx()
         self.clear_irq_flags()
 
-
     def end(self):
         if self.spidev:
             self.spidev.close()
@@ -325,8 +320,7 @@ class NRF24:
         # Go!
         self.ce(1)
 
-
-    def ce(self, level, pulse = 0):
+    def ce(self, level, pulse=0):
         # CE Pin is optional
         if self.ce_pin is not None:
             GPIO.output(self.ce_pin, level)
@@ -334,14 +328,14 @@ class NRF24:
                 time.sleep(pulse)
                 GPIO.output(self.ce_pin, 1 - level)
 
-    def irqWait(self, timeout = 30000):
+    def irqWait(self, timeout=30000):
         # TODO: A race condition may occur here. => wait for level?
         if GPIO.input(self.irq_pin) == 0:  # Pin is already down. Packet is waiting?
             return True
 
         try:
             return GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING, timeout) == 1
-        except TypeError: # Timeout parameter not supported
+        except TypeError:  # Timeout parameter not supported
             return GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING) == 1
         except AttributeError:
             raise RuntimeError("GPIO lib does not support wait_for_edge()")
@@ -360,32 +354,31 @@ class NRF24:
         """ Write register value """
         buf = [NRF24.W_REGISTER | (NRF24.REGISTER_MASK & reg)]
         buf += self._to_8b_list(value)
-        self.spidev.xfer2(buf)   
+        self.spidev.xfer2(buf)
 
     def write_payload(self, buf):
         """ Writes data to the payload register, automatically padding it
             to match the required length. Returns the number of bytes
             actually written. """
-        
+
         buf = self._to_8b_list(buf)
         if self.dynamic_payloads_enabled:
             if len(buf) > self.MAX_PAYLOAD_SIZE:
-                raise RuntimeError("Dynamic payload is larger than the "+
-                    "maximum size.")
+                raise RuntimeError("Dynamic payload is larger than the " +
+                                   "maximum size.")
             blank_len = 0
         else:
             if len(buf) > self.payload_size:
                 raise RuntimeError("Payload is larger than the fixed payload" +
-                    "size (%d vs. %d bytes)" % (len(buf), self.payload_size))
+                                   "size (%d vs. %d bytes)" % (len(buf), self.payload_size))
             blank_len = self.payload_size - len(buf)
-        
+
         txbuffer = [NRF24.W_TX_PAYLOAD] + buf + ([0x00] * blank_len)
         self.spidev.xfer2(txbuffer)
         return len(txbuffer) - 1
-        
-    
+
     def read_payload(self, buf, buf_len=-1):
-        """ Reads data from the payload register and sets the 
+        """ Reads data from the payload register and sets the
             DR bit of the STATUS register. """
 
         if buf_len < 0:
@@ -403,7 +396,7 @@ class NRF24:
         payload = self.spidev.xfer2(txbuffer)
         del buf[:]
         buf += payload[1:data_len + 1]
-        
+
         self.write_register(NRF24.STATUS, NRF24.RX_DR)
 
         return data_len
@@ -433,8 +426,7 @@ class NRF24:
             value,
             (value >> NRF24.PLOS_CNT) & int("1111", 2),
             (value >> NRF24.ARC_CNT) & int("1111", 2))
-
-        self.print_single_status_line("OBSERVE_TX",tx_str)
+        self.print_single_status_line("OBSERVE_TX", tx_str)
 
     def print_byte_register(self, name, reg, qty=1):
         registers = ["0x{:0>2x}".format(self.read_register(reg+r)) for r in range(0, qty)]
@@ -512,18 +504,18 @@ class NRF24:
 
         sent_at = monotonic()
         packet_time = ((1 + length + self.crc_length + self.address_length) * 8 + 9)/(self.data_rate_bits * 1000.)
-        
+
         if self.auto_ack != 0:
-            packet_time *=2
+            packet_time *= 2
 
         if self.retries != 0 and self.auto_ack != 0:
-            timeout = sent_at + (packet_time + self.delay)*self.retries 
+            timeout = sent_at + (packet_time + self.delay)*self.retries
         else:
-            timeout = sent_at + packet_time * 2 # 2 is empiric
-        
+            timeout = sent_at + packet_time * 2  # 2 is empiric
+
         #while NRF24.TX_DS &  self.get_status() == 0:
         #    pass
-        
+
         #print monotonic() - sent_at
         #print packet_time
 
@@ -535,15 +527,15 @@ class NRF24:
                 return True
 
             if status & NRF24.MAX_RT:
-                self.last_error  = 'MAX_RT' 
+                self.last_error = 'MAX_RT'
                 self.ce(0)
                 break
-        
+
         self.ce(0)
         if self.last_error is None:
             self.last_error = 'TIMEOUT'
-        
-        self.flush_tx() # Avoid leaving the payload in tx fifo
+
+        self.flush_tx()  # Avoid leaving the payload in tx fifo
         return False
 
     def startFastWrite(self, buf):
@@ -560,7 +552,7 @@ class NRF24:
         self.write_payload(buf)
 
         # Allons!
-        self.ce(1,10e-6)
+        self.ce(1, 10e-6)
 
     def getDynamicPayloadSize(self):
         return self.spidev.xfer2([NRF24.R_RX_PL_WID, NRF24.NOP])[1]
@@ -583,7 +575,7 @@ class NRF24:
         del pipe_num[:]
         if result and pipe_num is not None:
             pipe_num.append((status & NRF24.RX_P_NO_MASK) >> NRF24.RX_P_NO)
-        
+
         # Handle ack payload receipt
         if status & NRF24.TX_DS:
             self.write_register(NRF24.STATUS, NRF24.TX_DS)
@@ -628,24 +620,23 @@ class NRF24:
             raise RuntimeError("Invalid pipe number")
         if (pipe >= 2 and len(address) > 1) or len(address) > 5:
             raise RuntimeError("Invalid adress length")
-        
+
         if pipe == 0:
             self.pipe0_reading_address = address
-       
+
         self.write_register(NRF24.RX_ADDR_P0 + pipe, address)
         if not self.dynamic_payloads_enabled:
             self.write_register(NRF24.RX_PW_P0 + pipe, self.payload_size)
- 
 
         # Note it would be more efficient to set all of the bits for all open
         # pipes at once.  However, I thought it would make the calling code
         # more simple to do it this way.
         self.write_register(NRF24.EN_RXADDR,
-                            self.read_register(NRF24.EN_RXADDR) | (1<<pipe))
-        
+                            self.read_register(NRF24.EN_RXADDR) | (1 << pipe))
+
     def closeReadingPipe(self, pipe):
         self.write_register(NRF24.EN_RXADDR,
-                            self.read_register(NRF24.EN_RXADDR) & ~(1<<pipe))
+                            self.read_register(NRF24.EN_RXADDR) & ~(1 << pipe))
 
     def toggle_features(self):
         buf = [NRF24.ACTIVATE, 0x73]
@@ -705,7 +696,7 @@ class NRF24:
         if enable:
             self.write_register(NRF24.EN_AA, 0x3F)
             self.auto_ack = 0x3f
-            self.setCRCLength(NRF24.CRC_8) # Enhanced Shockburst requires at least 1 byte CRC
+            self.setCRCLength(NRF24.CRC_8)  # Enhanced Shockburst requires at least 1 byte CRC
         else:
             self.auto_ack = 0
             self.write_register(NRF24.EN_AA, 0)
@@ -714,12 +705,12 @@ class NRF24:
         if pipe <= 6:
             en_aa = self.read_register(NRF24.EN_AA)
             if enable:
-                self.setCRCLength(NRF24.CRC_8) # Enhanced Shockburst requires at least 1 byte CRC
-                en_aa |= 1<<pipe
-                self.auto_ack |= 1<<pipe
+                self.setCRCLength(NRF24.CRC_8)  # Enhanced Shockburst requires at least 1 byte CRC
+                en_aa |= 1 << pipe
+                self.auto_ack |= 1 << pipe
             else:
-                en_aa &= ~1<<pipe
-                self.auto_ack &= ~1<<pipe
+                en_aa &= ~1 << pipe
+                self.auto_ack &= ~1 << pipe
 
             self.write_register(NRF24.EN_AA, en_aa)
 
@@ -727,9 +718,6 @@ class NRF24:
         if width >= 2 and width <= 5:
             self.write_register(NRF24.SETUP_AW, width - 2)
             self.address_width = width
-
-    def getAddressWidth(self):
-        return selfwrite_register(NRF24.SETUP_AW) & 0x3
 
     def testCarrier(self):
         return self.read_register(NRF24.RPD) & 1
@@ -766,7 +754,7 @@ class NRF24:
     def setDataRate(self, speed):
         setup = self.read_register(NRF24.RF_SETUP)
         setup &= (~NRF24.RF_DR_LOW | NRF24.RF_DR_HIGH)
-        
+
         if speed == NRF24.BR_250KBPS:
             # Must set the RF_DR_LOW to 1 RF_DR_HIGH (used to be RF_DR) is already 0
             # Making it '10'.
@@ -783,7 +771,7 @@ class NRF24:
             # 1Mbs
             self.data_rate_bits = 1000
             self.data_rate = NRF24.BR_1MBPS
-        
+
         self.write_register(NRF24.RF_SETUP, setup)
 
         # Verify our result
@@ -804,7 +792,7 @@ class NRF24:
 
     def setCRCLength(self, length):
         config = self.read_register(NRF24.CONFIG) & ~(NRF24.CRC_16 | NRF24.CRC_ENABLED)
-        
+
         if length == NRF24.CRC_DISABLED:
             self.crc_length = 0
         elif length == NRF24.CRC_8:
@@ -855,13 +843,13 @@ class NRF24:
             to avoid problems resulting from left over configuration
             from other programs."""
         self.ce(0)
-        reset_values = {0: 0x08, 1: 0x3F, 2:0x02, 3:0x03, 4:0x03, 5:0x02, 6:0x06,
+        reset_values = {0: 0x08, 1: 0x3F, 2: 0x02, 3: 0x03, 4: 0x03, 5: 0x02, 6: 0x06,
                         0x0a: [0xe7, 0xe7, 0xe7, 0xe7, 0xe7],
                         0x0b: [0xc2, 0xc2, 0xc2, 0xc2, 0xc2],
-                        0x0c: 0xc3, 0x0d:0xc4, 0x0e:0xc5, 0x0f:0xc6,
+                        0x0c: 0xc3, 0x0d: 0xc4, 0x0e: 0xc5, 0x0f: 0xc6,
                         0x10: [0xe7, 0xe7, 0xe7, 0xe7, 0xe7],
-                        0x11: 0, 0x12:0, 0x13:0, 0x14: 0, 0x15: 0, 0x16: 0,
-                        0x1c: 0, 0x1d:0}
+                        0x11: 0, 0x12: 0, 0x13: 0, 0x14: 0, 0x15: 0, 0x16: 0,
+                        0x1c: 0, 0x1d: 0}
         for reg, value in reset_values.items():
             self.write_register(reg, value)
 
