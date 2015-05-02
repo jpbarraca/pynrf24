@@ -28,7 +28,6 @@ radio.stopListening()
 
 radio.printDetails()
 
-buf = ['P', 'I', 'N', 'G']
 while True:
-    radio.write(buf)
+    radio.write("PING")
     time.sleep(1)
