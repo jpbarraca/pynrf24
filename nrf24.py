@@ -128,8 +128,6 @@ class NRF24:
     ARC_CNT = 0
     RX_P_NO = 1
 
-
-
     TX_REUSE = 6
     FIFO_FULL = 5
     TX_EMPTY = 4
