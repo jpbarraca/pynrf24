@@ -593,7 +593,10 @@ class NRF24:
     def whatHappened(self):
         # Read the status & reset the status in one easy call
         # Or is that such a good idea?
-        status = self.write_register(NRF24.STATUS, NRF24.RX_DR | NRF24.TX_DS | NRF24.MAX_RT)
+        self.write_register(NRF24.STATUS, NRF24.RX_DR | NRF24.TX_DS | NRF24.MAX_RT)
+
+        status = self.get_status()
+        self.clear_irq_flags()
 
         # Report to the user what happened
         tx_ok = status & NRF24.TX_DS
