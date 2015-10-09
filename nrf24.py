@@ -585,7 +585,7 @@ class NRF24:
         self.read_payload(buf, buf_len)
 
         # was this the last of the data available?
-        return self.read_register(NRF24.FIFO_STATUS) & NRF24.RX_EMPTY
+        return self.read_register(NRF24.FIFO_STATUS) & (1 << NRF24.RX_EMPTY)
 
     def clear_irq_flags(self):
         self.write_register(NRF24.STATUS, NRF24.RX_DR | NRF24.TX_DS | NRF24.MAX_RT)
@@ -697,7 +697,8 @@ class NRF24:
         if enable:
             self.write_register(NRF24.EN_AA, 0x3F)
             self.auto_ack = 0x3f
-            self.setCRCLength(NRF24.CRC_8)  # Enhanced Shockburst requires at least 1 byte CRC
+            if self.crc_length == 0:
+                self.setCRCLength(NRF24.CRC_8)  # Enhanced Shockburst requires at least 1 byte CRC
         else:
             self.auto_ack = 0
             self.write_register(NRF24.EN_AA, 0)
