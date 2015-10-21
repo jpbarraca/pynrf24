@@ -142,7 +142,6 @@ class NRF24:
     DPL_P2 = 2
     DPL_P1 = 1
     DPL_P0 = 0
-    EN_DPL = 2
 
     #Masks
     RX_P_NO_MASK = 0x0E
