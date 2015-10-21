@@ -75,6 +75,9 @@ class NRF24:
     CRC_16 = 0x04
     CRC_ENABLED = 0x08
 
+    EN_CRC = 0x08
+    CRCO = 0x04
+
     # Registers
     CONFIG = 0x00
     EN_AA = 0x01
@@ -107,8 +110,7 @@ class NRF24:
     MASK_RX_DR = 0x40
     MASK_TX_DS = 0x20
     MASK_MAX_RT = 0x10
-    EN_CRC = 0x08
-    CRCO = 0x04
+
     PWR_UP = 0x02
     PRIM_RX = 0x01
     PLL_LOCK = 0x10
@@ -793,17 +795,17 @@ class NRF24:
             return NRF24.BR_1MBPS
 
     def setCRCLength(self, length):
-        config = self.read_register(NRF24.CONFIG) & ~(NRF24.CRC_16 | NRF24.CRC_ENABLED)
+        config = self.read_register(NRF24.CONFIG) & ~(NRF24.EN_CRC | NRF24.CRC0)
 
         if length == NRF24.CRC_DISABLED:
             self.crc_length = 0
         elif length == NRF24.CRC_8:
-            config |= NRF24.CRC_ENABLED
-            config |= NRF24.CRC_8
+            config |= NRF24.EN_CRC
+            config ^= NRF24.CRC0
             self.crc_length = 1
         else:
-            config |= NRF24.CRC_ENABLED
-            config |= NRF24.CRC_16
+            config |= NRF24.EN_CRC
+            config |= NRF24.CRC0
             self.crc_length = 2
 
         self.write_register(NRF24.CONFIG, config)
