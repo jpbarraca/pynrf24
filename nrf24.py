@@ -210,7 +210,7 @@ class NRF24:
         self.spidev = None
         self.last_error = 0
         self.crc_length = 0
-        self.auto_ack = 0
+        self.auto_ack = 0x3F
         self.address_length = 5
 
         # If all parameters are available, lets start the radio!
@@ -585,7 +585,7 @@ class NRF24:
         self.read_payload(buf, buf_len)
 
         # was this the last of the data available?
-        return self.read_register(NRF24.FIFO_STATUS) & (1 << NRF24.RX_EMPTY)
+        return self.read_register(NRF24.FIFO_STATUS & NRF24.RX_EMPTY)
 
     def clear_irq_flags(self):
         self.write_register(NRF24.STATUS, NRF24.RX_DR | NRF24.TX_DS | NRF24.MAX_RT)
