@@ -757,7 +757,7 @@ class NRF24:
 
     def setDataRate(self, speed):
         setup = self.read_register(NRF24.RF_SETUP)
-        setup &= (~NRF24.RF_DR_LOW | NRF24.RF_DR_HIGH)
+        setup &= ~(NRF24.RF_DR_LOW | NRF24.RF_DR_HIGH)
 
         if speed == NRF24.BR_250KBPS:
             # Must set the RF_DR_LOW to 1 RF_DR_HIGH (used to be RF_DR) is already 0
