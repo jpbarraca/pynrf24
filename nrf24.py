@@ -800,7 +800,7 @@ class NRF24:
             self.crc_length = 0
         elif length == NRF24.CRC_8:
             config |= NRF24.EN_CRC
-            config ^= NRF24.CRC0
+            config &= ~NRF24.CRC0
             self.crc_length = 1
         else:
             config |= NRF24.EN_CRC
