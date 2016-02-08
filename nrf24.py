@@ -794,17 +794,17 @@ class NRF24:
             return NRF24.BR_1MBPS
 
     def setCRCLength(self, length):
-        config = self.read_register(NRF24.CONFIG) & ~(NRF24.EN_CRC | NRF24.CRC0)
+        config = self.read_register(NRF24.CONFIG) & ~(NRF24.EN_CRC | NRF24.CRCO)
 
         if length == NRF24.CRC_DISABLED:
             self.crc_length = 0
         elif length == NRF24.CRC_8:
             config |= NRF24.EN_CRC
-            config &= ~NRF24.CRC0
+            config &= ~NRF24.CRCO
             self.crc_length = 1
         else:
             config |= NRF24.EN_CRC
-            config |= NRF24.CRC0
+            config |= NRF24.CRCO
             self.crc_length = 2
 
         self.write_register(NRF24.CONFIG, config)
