@@ -511,12 +511,6 @@ class NRF24:
         else:
             timeout = sent_at + packet_time * 2  # 2 is empiric
 
-        #while NRF24.TX_DS &  self.get_status() == 0:
-        #    pass
-
-        #print monotonic() - sent_at
-        #print packet_time
-
         while monotonic() < timeout:
             time.sleep(packet_time)
             status = self.get_status()
