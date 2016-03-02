@@ -499,13 +499,13 @@ class NRF24:
         self.ce(1)
 
         sent_at = monotonic()
-        packet_time = ((1 + length + self.crc_length + self.address_length) * 8 + 9)/(self.data_rate_bits * 1000.)
+        packet_time = ((1 + length + self.crc_length + self.address_length) * 8 + 9)/(self.data_rate_bits * 1000.) + 130e-6
 
         if self.auto_ack != 0:
             packet_time *= 2
 
-        if self.retries != 0 and self.auto_ack != 0:
-            timeout = sent_at + (packet_time + self.delay)*self.retries
+        if self.retries != 0 and self.delay != 0:
+            timeout = sent_at + (packet_time + self.delay + 130e-6) * (self.retries + 1)
         else:
             timeout = sent_at + packet_time * 2  # 2 is empiric
 
