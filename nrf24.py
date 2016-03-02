@@ -418,10 +418,10 @@ class NRF24:
         self.print_single_status_line("STATUS", status_str)
 
     def print_observe_tx(self, value):
-        tx_str = "OBSERVE_TX=0x{0:02x}: POLS_CNT={2:x} ARC_CNT={2:x}\r\n".format(
+        tx_str = "OBSERVE_TX=0x{0:02x}: PLOS_CNT={1:x} ARC_CNT={2:x}".format(
             value,
-            (value >> NRF24.PLOS_CNT) & int("1111", 2),
-            (value >> NRF24.ARC_CNT) & int("1111", 2))
+            (value >> NRF24.PLOS_CNT) & 0xf,
+            (value >> NRF24.ARC_CNT) & 0xf)
         self.print_single_status_line("OBSERVE_TX", tx_str)
 
     def print_byte_register(self, name, reg, qty=1):
