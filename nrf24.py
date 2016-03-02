@@ -261,7 +261,7 @@ class NRF24:
         # Set 1500uS (minimum for 32B payload in ESB@250KBPS) timeouts, to make testing a little easier
         # WARNING: If this is ever lowered, either 250KBS mode with AA is broken or maximum packet
         # sizes must never be used. See documentation for a more complete explanation.
-        self.setRetries(int('0101', 2), 15)
+        self.setRetries(5, 15)
 
         # Restore our default PA level
         self.setPALevel(NRF24.PA_MAX)
@@ -291,8 +291,6 @@ class NRF24:
         # This channel should be universally safe and not bleed over into adjacent
         # spectrum.
         self.setChannel(self.channel)
-
-        self.setRetries(15, 15)
 
         # Flush buffers
         self.flush_rx()
