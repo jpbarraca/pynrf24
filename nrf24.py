@@ -306,7 +306,6 @@ class NRF24:
 
     def startListening(self):
         self.write_register(NRF24.CONFIG, self.read_register(NRF24.CONFIG) | NRF24.PWR_UP | NRF24.PRIM_RX)
-        self.write_register(NRF24.STATUS, NRF24.RX_DR | NRF24.TX_DS | NRF24.MAX_RT)
 
         self.flush_tx()
         self.flush_rx()
