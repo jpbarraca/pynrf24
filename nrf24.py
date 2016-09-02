@@ -571,8 +571,9 @@ class NRF24:
                     if status & NRF24.RX_DR or (status & NRF24.RX_P_NO_MASK != NRF24.RX_P_NO_MASK):
                         result = True
 
-        del pipe_num[:]
+
         if result and pipe_num is not None:
+            del pipe_num[:]
             pipe_num.append((status & NRF24.RX_P_NO_MASK) >> NRF24.RX_P_NO)
 
         # Handle ack payload receipt
