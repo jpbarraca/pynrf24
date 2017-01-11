@@ -209,7 +209,7 @@ class NRF24:
         self.ack_payload_length = 5  # *< Dynamic size of pending ack payload.
         self.pipe0_reading_address = None  # *< Last address set on pipe 0 for reading.
         self.spidev = None
-        self.last_error = 0
+        self.last_error = None
         self.crc_length = 0
         self.auto_ack = 0x3F
         self.address_length = 5
@@ -496,19 +496,19 @@ class NRF24:
     def write(self, buf):
         self.last_error = None
         length = self.write_payload(buf)
-        self.ce(1)
-
-        sent_at = monotonic()
         packet_time = ((1 + length + self.crc_length + self.address_length) * 8 + 9)/(self.data_rate_bits * 1000.) + 130e-6
 
         if self.auto_ack != 0:
             packet_time *= 2
 
         if self.retries != 0 and self.delay != 0:
-            timeout = sent_at + (packet_time + self.delay + 130e-6) * (self.retries + 1)
+            timeout = (packet_time + self.delay + 130e-6) * (self.retries + 1)
         else:
-            timeout = sent_at + packet_time * 2  # 2 is empiric
+            timeout = packet_time * 2  # 2 is empiric
 
+        self.ce(1)
+
+        timeout += monotonic()
         while monotonic() < timeout:
             time.sleep(packet_time)
             status = self.get_status()
@@ -518,7 +518,6 @@ class NRF24:
 
             if status & NRF24.MAX_RT:
                 self.last_error = 'MAX_RT'
-                self.ce(0)
                 break
 
         self.ce(0)
