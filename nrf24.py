@@ -418,7 +418,7 @@ class NRF24:
         self.print_single_status_line("STATUS", status_str)
 
     def print_observe_tx(self, value):
-        tx_str = "OBSERVE_TX=0x{0:02x}: PLOS_CNT={1:x} ARC_CNT={2:x}".format(
+        tx_str = "0x{0:02x} PLOS_CNT={1:x} ARC_CNT={2:x}".format(
             value,
             (value >> NRF24.PLOS_CNT) & 0xf,
             (value >> NRF24.ARC_CNT) & 0xf)
@@ -461,8 +461,9 @@ class NRF24:
         self.print_byte_register("EN_RXADDR", NRF24.EN_RXADDR)
         self.print_byte_register("RF_CH", NRF24.RF_CH)
         self.print_byte_register("RF_SETUP", NRF24.RF_SETUP)
+        self.print_byte_register("SETUP_RETR", NRF24.SETUP_RETR)
         self.print_byte_register("SETUP_AW", NRF24.SETUP_AW)
-        self.print_byte_register("OBSERVE_TX", NRF24.OBSERVE_TX)
+        self.print_observe_tx(self.read_register(NRF24.OBSERVE_TX))
         self.print_byte_register("CONFIG", NRF24.CONFIG)
         self.print_byte_register("FIFO_STATUS", NRF24.FIFO_STATUS)
         self.print_byte_register("DYNPD", NRF24.DYNPD)
