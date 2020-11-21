@@ -209,7 +209,7 @@ class NRF24:
         self.ack_payload_length = 5  # *< Dynamic size of pending ack payload.
         self.pipe0_reading_address = None  # *< Last address set on pipe 0 for reading.
         self.spidev = None
-        self.last_error = 0
+        self.last_error = None
         self.crc_length = 0
         self.auto_ack = 0x3F
         self.address_length = 5
@@ -261,7 +261,7 @@ class NRF24:
         # Set 1500uS (minimum for 32B payload in ESB@250KBPS) timeouts, to make testing a little easier
         # WARNING: If this is ever lowered, either 250KBS mode with AA is broken or maximum packet
         # sizes must never be used. See documentation for a more complete explanation.
-        self.setRetries(int('0101', 2), 15)
+        self.setRetries(5, 15)
 
         # Restore our default PA level
         self.setPALevel(NRF24.PA_MAX)
@@ -292,8 +292,6 @@ class NRF24:
         # spectrum.
         self.setChannel(self.channel)
 
-        self.setRetries(15, 15)
-
         # Flush buffers
         self.flush_rx()
         self.flush_tx()
@@ -306,7 +304,6 @@ class NRF24:
 
     def startListening(self):
         self.write_register(NRF24.CONFIG, self.read_register(NRF24.CONFIG) | NRF24.PWR_UP | NRF24.PRIM_RX)
-        self.write_register(NRF24.STATUS, NRF24.RX_DR | NRF24.TX_DS | NRF24.MAX_RT)
 
         self.flush_tx()
         self.flush_rx()
@@ -421,10 +418,10 @@ class NRF24:
         self.print_single_status_line("STATUS", status_str)
 
     def print_observe_tx(self, value):
-        tx_str = "OBSERVE_TX=0x{0:02x}: POLS_CNT={2:x} ARC_CNT={2:x}\r\n".format(
+        tx_str = "0x{0:02x} PLOS_CNT={1:x} ARC_CNT={2:x}".format(
             value,
-            (value >> NRF24.PLOS_CNT) & int("1111", 2),
-            (value >> NRF24.ARC_CNT) & int("1111", 2))
+            (value >> NRF24.PLOS_CNT) & 0xf,
+            (value >> NRF24.ARC_CNT) & 0xf)
         self.print_single_status_line("OBSERVE_TX", tx_str)
 
     def print_byte_register(self, name, reg, qty=1):
@@ -464,8 +461,9 @@ class NRF24:
         self.print_byte_register("EN_RXADDR", NRF24.EN_RXADDR)
         self.print_byte_register("RF_CH", NRF24.RF_CH)
         self.print_byte_register("RF_SETUP", NRF24.RF_SETUP)
+        self.print_byte_register("SETUP_RETR", NRF24.SETUP_RETR)
         self.print_byte_register("SETUP_AW", NRF24.SETUP_AW)
-        self.print_byte_register("OBSERVE_TX", NRF24.OBSERVE_TX)
+        self.print_observe_tx(self.read_register(NRF24.OBSERVE_TX))
         self.print_byte_register("CONFIG", NRF24.CONFIG)
         self.print_byte_register("FIFO_STATUS", NRF24.FIFO_STATUS)
         self.print_byte_register("DYNPD", NRF24.DYNPD)
@@ -499,25 +497,19 @@ class NRF24:
     def write(self, buf):
         self.last_error = None
         length = self.write_payload(buf)
-        self.ce(1)
-
-        sent_at = monotonic()
-        packet_time = ((1 + length + self.crc_length + self.address_length) * 8 + 9)/(self.data_rate_bits * 1000.)
+        packet_time = ((1 + length + self.crc_length + self.address_length) * 8 + 9)/(self.data_rate_bits * 1000.) + 130e-6
 
         if self.auto_ack != 0:
             packet_time *= 2
 
-        if self.retries != 0 and self.auto_ack != 0:
-            timeout = sent_at + (packet_time + self.delay)*self.retries
+        if self.retries != 0 and self.delay != 0:
+            timeout = (packet_time + self.delay + 130e-6) * (self.retries + 1)
         else:
-            timeout = sent_at + packet_time * 2  # 2 is empiric
+            timeout = packet_time * 2  # 2 is empiric
 
-        #while NRF24.TX_DS &  self.get_status() == 0:
-        #    pass
+        self.ce(1)
 
-        #print monotonic() - sent_at
-        #print packet_time
-
+        timeout += monotonic()
         while monotonic() < timeout:
             time.sleep(packet_time)
             status = self.get_status()
@@ -527,7 +519,6 @@ class NRF24:
 
             if status & NRF24.MAX_RT:
                 self.last_error = 'MAX_RT'
-                self.ce(0)
                 break
 
         self.ce(0)
