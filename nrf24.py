@@ -324,13 +324,14 @@ class NRF24:
                 time.sleep(pulse)
                 GPIO.output(self.ce_pin, 1 - level)
 
-    def irqWait(self, timeout=30000):
+    def irqWait(self, 
+30000):
         # TODO: A race condition may occur here. => wait for level?
         if GPIO.input(self.irq_pin) == 0:  # Pin is already down. Packet is waiting?
             return True
 
         try:
-            return GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING, timeout=timeout) == 1
+            return GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING, timeout=timeout) == self.irq_pin
         except TypeError:  # Timeout parameter not supported
             return GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING) == 1
         except AttributeError:
