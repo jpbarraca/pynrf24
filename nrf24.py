@@ -333,7 +333,7 @@ class NRF24:
             return True
 
         try:
-            return GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING, timeout) == 1
+            return GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING, timeout=timeout) == 1
         except TypeError:  # Timeout parameter not supported
             return GPIO.wait_for_edge(self.irq_pin, GPIO.FALLING) == 1
         except AttributeError:
