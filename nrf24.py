@@ -324,8 +324,7 @@ class NRF24:
                 time.sleep(pulse)
                 GPIO.output(self.ce_pin, 1 - level)
 
-    def irqWait(self, 
-30000):
+    def irqWait(self, timeout=30000):
         # TODO: A race condition may occur here. => wait for level?
         if GPIO.input(self.irq_pin) == 0:  # Pin is already down. Packet is waiting?
             return True
